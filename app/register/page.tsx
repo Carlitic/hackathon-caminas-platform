@@ -39,8 +39,11 @@ export default function RegisterPage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
 
-        // Validate Conselleria email
-        if (!formData.email.endsWith('@alu.edu.gva.es')) {
+        // Validate Email
+        const isAdminEmail = formData.email === 'carloscastanosblanco@gmail.com'
+        const isConselleria = formData.email.endsWith('@alu.edu.gva.es')
+
+        if (!isAdminEmail && !isConselleria) {
             alert('Debes usar tu correo corporativo de alumno (@alu.edu.gva.es)')
             return
         }

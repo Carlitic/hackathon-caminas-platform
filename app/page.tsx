@@ -40,7 +40,7 @@ export default function Home() {
               </Link>
               <Link href="/register">
                 <Button size="lg" variant="secondary" className="font-semibold w-full sm:w-auto">
-                  Crear Cuenta (Alumno)
+                  Registro Alumno
                 </Button>
               </Link>
               <Link href="/register/teacher">

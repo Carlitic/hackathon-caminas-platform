@@ -47,8 +47,11 @@ export default function RegisterTeacherPage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
 
-        // Validate Conselleria email
-        if (!formData.email.endsWith('@edu.gva.es')) {
+        // Validate Email
+        const isAdminEmail = formData.email === 'carloscastanosblanco@gmail.com'
+        const isConselleria = formData.email.endsWith('@edu.gva.es')
+
+        if (!isAdminEmail && !isConselleria) {
             alert('Debes usar tu correo corporativo de profesor (@edu.gva.es)')
             return
         }
