@@ -162,10 +162,6 @@ Este proyecto está bajo la licencia MIT.
 
 Las contribuciones son bienvenidas. Por favor, abre un issue primero para discutir los cambios que te gustaría hacer.
 
-## 📧 Contacto
-
-IES El Caminàs - Castellón
-
 ---
 
 Desarrollado con ❤️ para la Hackathon 2026
