@@ -125,7 +125,7 @@ export default function Home() {
       <footer className="py-6 md:px-8 md:py-0 border-t">
         <div className="container flex flex-col items-start justify-start gap-4 md:h-24 px-4">
           <p className="text-left text-sm leading-loose text-muted-foreground">
-            Built for IES El Caminàs by <span className="font-medium underline underline-offset-4">1º DAW</span>.
+            Built for IES El Caminàs.
           </p>
         </div>
       </footer>
