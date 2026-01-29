@@ -78,14 +78,20 @@ export async function updateStudent(studentId: string, data: { full_name: string
 }
 
 // Get teams
-export async function getTeams() {
-    const { data, error } = await supabase
+export async function getTeams(yearLevel?: string) {
+    let query = supabase
         .from('teams')
         .select(`
       *,
       members:profiles(id, full_name, cycle, year_level)
     `)
         .order('team_number')
+
+    if (yearLevel) {
+        query = query.eq('year_level', yearLevel)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return data

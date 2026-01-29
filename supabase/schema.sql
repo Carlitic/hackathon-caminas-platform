@@ -237,3 +237,12 @@ CREATE INDEX idx_profiles_tutor_id ON profiles(tutor_id);
 CREATE INDEX idx_teams_year_level ON teams(year_level);
 CREATE INDEX idx_votes_team_id ON votes(team_id);
 CREATE INDEX idx_requirements_teacher_id ON requirements(teacher_id);
+
+-- =====================================================
+-- PUBLIC ACCESS POLICIES
+-- =====================================================
+
+-- Allow anyone (including unauthenticated users) to read profiles of tutors
+-- This is necessary for the registration page to populate the tutor dropdown
+CREATE POLICY "Public can read tutors" ON profiles
+  FOR SELECT USING (is_tutor = true);

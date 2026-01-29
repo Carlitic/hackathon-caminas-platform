@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserPlus, Trophy } from "lucide-react"
+import { getCurrentUserProfile } from "@/lib/auth"
 import { toast } from "sonner"
 import {
     AlertDialog,
@@ -48,24 +49,25 @@ export default function GeneralTeacherDashboard() {
     const [votingOpen, setVotingOpen] = useState(true)
 
     useEffect(() => {
-        // Mock Profile for Non-Tutor Teacher
-        const mockProfile = {
-            id: 'mock-id-2',
-            full_name: 'Prof. Ana Martínez',
-            email: 'ana.martinez@edu.gva.es',
-            role: 'teacher',
-            tutor_group: null,
-            is_tutor: false,
-            subjects: ['Bases de Datos']
-        }
-        setProfile(mockProfile)
-
-        // Mock Initial Requirements
-        setRequirements([
-            { id: 1, title: "Script SQL Normalizado", desc: "El proyecto debe incluir el script de creación de la BBDD con al menos 3 tablas relacionadas.", tag: "Bases de Datos" },
-            { id: 2, title: "Diagrama E-R", desc: "Se debe entregar el diagrama entidad-relación en formato PDF.", tag: "Bases de Datos" }
-        ])
+        checkAuth()
     }, [])
+
+    async function checkAuth() {
+        const userProfile = await getCurrentUserProfile()
+        if (!userProfile || userProfile.role !== 'teacher') {
+            router.push('/login')
+            return
+        }
+
+        if (userProfile.is_tutor) {
+            router.push('/teacher/dashboard')
+            return
+        }
+
+        setProfile(userProfile)
+        // TODO: Load real requirements and votes when API is ready
+        setRequirements([])
+    }
 
     function handleCreateRequirement() {
         if (!reqForm.title || !reqForm.description) {

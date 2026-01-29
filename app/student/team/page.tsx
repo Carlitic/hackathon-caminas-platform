@@ -1,13 +1,16 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { getCurrentUserProfile } from "@/lib/auth"
+import { getMyTeam, getAvailableTeachers } from "@/lib/student"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Users, Github, Mail, AlertCircle, Copy, LifeBuoy } from "lucide-react"
-import Certificate from "@/components/Certificate"
+
 import {
     Dialog,
     DialogContent,
@@ -19,28 +22,69 @@ import {
 import { toast } from "sonner"
 
 export default function StudentTeamPage() {
-    // Mock Data - Team with all 1st year students (2 from each cycle)
-    const teamMembers = [
-        { role: "1º DAW", name: "Carlos Castaños", email: "carlos@alu.edu.gva.es", cycle: "1º DAW", level: "1º", status: "filled" },
-        { role: "1º DAW", name: "Ana García", email: "ana@alu.edu.gva.es", cycle: "1º DAW", level: "1º", status: "filled" },
-        { role: "1º DAM", name: "Juan Pérez", email: "juan@alu.edu.gva.es", cycle: "1º DAM", level: "1º", status: "filled" },
-        { role: "1º DAM", name: "María López", email: "maria@alu.edu.gva.es", cycle: "1º DAM", level: "1º", status: "filled" },
-        { role: "1º ASIR", name: "Pedro Sánchez", email: "pedro@alu.edu.gva.es", cycle: "1º ASIR", level: "1º", status: "filled" },
-        { role: "1º ASIR", name: "Laura Martín", email: "laura@alu.edu.gva.es", cycle: "1º ASIR", level: "1º", status: "filled" },
-    ]
+    const [loading, setLoading] = useState(true)
+    const [profile, setProfile] = useState<any>(null)
+    const [team, setTeam] = useState<any>(null)
+    const [teachers, setTeachers] = useState<any[]>([])
 
-    // Mock Requirements with teacher names
-    const requirements = [
-        { tag: "GLOBAL", title: "Implementar Login con Supabase", teacher: "Prof. María López" },
-        { tag: "DAW", title: "Crear interfaz de gestión de equipos", teacher: "Prof. Juan Martínez" },
-        { tag: "GLOBAL", title: "Desplegar en Vercel", teacher: "Prof. María López" },
-    ]
+    // Team structure requirements
+    const requiredRoles = ['1º DAW', '1º DAW', '1º DAM', '1º DAM', '1º ASIR', '1º ASIR']
 
-    // Mock event status and team position
-    const eventFinished = true // Set to true when event ends
-    const teamPosition = 1 // 1 = Gold, 2 = Silver, 3 = Bronze, 4+ = Participant
-    const teamName = "Equipo 1"
-    const studentName = "Carlos Castaños"
+    useEffect(() => {
+        loadData()
+    }, [])
+
+    async function loadData() {
+        setLoading(true)
+        try {
+            const userProfile = await getCurrentUserProfile()
+            if (!userProfile) return // middleware handles redirect
+
+            setProfile(userProfile)
+
+            const teamData = await getMyTeam(userProfile.id)
+            setTeam(teamData)
+
+            const teachersData = await getAvailableTeachers()
+            setTeachers(teachersData)
+
+        } catch (error) {
+            console.error(error)
+            toast.error("Error al cargar datos")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    if (loading) return <div className="flex h-screen items-center justify-center">Cargando...</div>
+
+    // Helper to build the visual team slots
+    const teamSlots = requiredRoles.map((role, index) => {
+        // Try to find a member that fits this slot (and hasn't been used yet)
+        // ideally logic should be robust, for now we map sequentially or by strict cycle match
+        // A simple approach: Filter members by cycle, take the n-th one.
+        const cycle = role // e.g., "1º DAW"
+        const membersInCycle = team?.members?.filter((m: any) => m.cycle === cycle) || []
+
+        // We need to distribute them. 
+        // If index is 0 or 1, it's DAW. 0 -> first DAW, 1 -> second DAW.
+        // If index is 2 or 3, it's DAM.
+        // If index is 4 or 5, it's ASIR.
+
+        let member = null
+        if (role.includes("DAW")) member = membersInCycle[index % 2]
+        if (role.includes("DAM")) member = membersInCycle[index % 2]
+        if (role.includes("ASIR")) member = membersInCycle[index % 2]
+
+        if (member) {
+            return { ...member, status: 'filled', roleSpec: role }
+        } else {
+            return { name: "Vacante", role: role, status: 'empty', roleSpec: role }
+        }
+    })
+
+    const isTeamReady = team?.status === 'READY'
+    const teamName = team?.name || "Sin Equipo"
 
     return (
         <div className="container mx-auto p-6 space-y-8">
@@ -69,17 +113,20 @@ export default function StudentTeamPage() {
                                 <div className="grid gap-2">
                                     <Label>Selecciona un Profesor:</Label>
                                     <div className="grid grid-cols-1 gap-2">
-                                        {['Prof. Juan Martínez (DAW)', 'Prof. María López (DAM)', 'Prof. Pedro Sánchez (ASIR)', 'Prof. Elena Rostova (Sistemas)'].map((teacher) => (
+                                        {teachers.map((teacher: any) => (
                                             <Button
-                                                key={teacher}
+                                                key={teacher.id}
                                                 variant="outline"
                                                 className="justify-start text-left h-auto py-3"
                                                 onClick={() => {
-                                                    toast.success(`Ayuda solicitada a ${teacher}`)
+                                                    toast.success(`Ayuda solicitada a ${teacher.full_name}`)
                                                 }}
                                             >
                                                 <Users className="mr-2 h-4 w-4" />
-                                                {teacher}
+                                                <div className="flex flex-col items-start">
+                                                    <span>{teacher.full_name}</span>
+                                                    <span className="text-xs text-muted-foreground">{teacher.subjects?.[0]}</span>
+                                                </div>
                                             </Button>
                                         ))}
                                     </div>
@@ -90,23 +137,18 @@ export default function StudentTeamPage() {
                 </div>
             </header>
 
-            {/* Certificate Display - Only shown when event is finished */}
-            {eventFinished && (
-                <div className="mb-8">
-                    <Certificate
-                        position={teamPosition}
-                        teamName={teamName}
-                        studentName={studentName}
-                    />
-                </div>
-            )}
-
             {/* Status Banner */}
-            <div className="bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-4 rounded">
+            <div className={`border-l-4 p-4 rounded ${isTeamReady ? 'bg-green-100 border-green-500 dark:bg-green-900/30' : 'bg-yellow-100 border-yellow-500 dark:bg-yellow-900/30'}`}>
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="font-bold text-yellow-700 dark:text-yellow-500">Estado: PENDIENTE</p>
-                        <p className="text-sm text-yellow-600 dark:text-yellow-400">Faltan 2 miembros para completar el equipo. No podéis entregar aún.</p>
+                        <p className={`font-bold ${isTeamReady ? 'text-green-700 dark:text-green-500' : 'text-yellow-700 dark:text-yellow-500'}`}>
+                            Estado: {team ? team.status : 'SIN ASIGNAR'}
+                        </p>
+                        <p className={`text-sm ${isTeamReady ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                            {isTeamReady
+                                ? 'Tu equipo está completo y listo para competir.'
+                                : 'Tu equipo aún no está completo o no has sido asignado a uno.'}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -115,22 +157,25 @@ export default function StudentTeamPage() {
                 {/* Roster Card */}
                 <Card className="md:col-span-2">
                     <CardHeader>
-                        <CardTitle>Composición del Equipo (2+2+2 del mismo año)</CardTitle>
-                        <CardDescription>2 de cada ciclo (DAW, DAM, ASIR), todos del mismo curso (1º o 2º) para igualdad de condiciones.</CardDescription>
+                        <CardTitle>Composición del Equipo: {teamName}</CardTitle>
+                        <CardDescription>2 de cada ciclo (DAW, DAM, ASIR), todos del mismo curso para igualdad de condiciones.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {teamMembers.map((member, i) => (
+                            {teamSlots.map((member, i) => (
                                 <div key={i} className={`flex items-center gap-4 p-4 rounded-lg border ${member.status === 'empty' ? 'border-dashed bg-slate-50 opacity-60' : 'bg-white shadow-sm'}`}>
                                     <Avatar>
-                                        <AvatarFallback>{member.role.split(' ')[1][0]}</AvatarFallback>
+                                        <AvatarFallback>{member.roleSpec.split(' ')[1][0]}</AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 overflow-hidden">
-                                        <p className="font-medium truncate">{member.name}</p>
-                                        <p className="text-xs text-muted-foreground">{member.role}</p>
+                                        <p className="font-medium truncate">{member.full_name || member.name}</p>
+                                        <p className="text-xs text-muted-foreground">{member.roleSpec}</p>
                                     </div>
                                     {member.status === 'filled' && (
-                                        <Button variant="ghost" size="icon" title="Copiar Email">
+                                        <Button variant="ghost" size="icon" title="Copiar Email" onClick={() => {
+                                            navigator.clipboard.writeText(member.email)
+                                            toast.success("Email copiado")
+                                        }}>
                                             <Copy className="h-4 w-4" />
                                         </Button>
                                     )}
@@ -149,8 +194,12 @@ export default function StudentTeamPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex gap-2">
-                            <Input placeholder="https://github.com/..." disabled />
-                            <Button disabled>Guardar</Button>
+                            <Input
+                                placeholder="https://github.com/..."
+                                defaultValue={team?.github_url || ''}
+                                disabled={!isTeamReady}
+                            />
+                            <Button disabled={!isTeamReady}>Guardar</Button>
                         </div>
                         <p className="text-xs text-muted-foreground">
                             El repositorio solo se puede vincular cuando el equipo esté completo (READY).
@@ -158,51 +207,34 @@ export default function StudentTeamPage() {
                     </CardContent>
                 </Card>
 
-                {/* Team Members Details Card (Replaces Tasks / Rubric) */}
+                {/* Members Details */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Miembros del Equipo</CardTitle>
-                        <CardDescription>Detalles de contacto y nivel de los miembros del equipo.</CardDescription>
+                        <CardDescription>Detalles de contacto.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {teamMembers.map((member, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900">
+                            {team?.members?.map((member: any) => (
+                                <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900">
                                     <div className="flex items-center gap-4">
                                         <Avatar>
                                             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                                                {member.name.split(' ').map(n => n[0]).join('')}
+                                                {member.full_name.charAt(0)}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-semibold">{member.name}</p>
+                                            <p className="font-semibold">{member.full_name}</p>
                                             <p className="text-sm text-muted-foreground">{member.cycle}</p>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <Mail className="h-3 w-3 text-muted-foreground" />
                                                 <p className="text-xs text-muted-foreground">{member.email}</p>
-                                                {member.status === 'filled' && (
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        className="h-6 px-2 text-xs"
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(member.email)
-                                                            alert('Email copiado al portapapeles')
-                                                        }}
-                                                    >
-                                                        <Copy className="h-3 w-3" />
-                                                    </Button>
-                                                )}
                                             </div>
                                         </div>
                                     </div>
-                                    {member.status === 'filled' && (
-                                        <Badge variant={member.level === 'Senior' ? 'default' : 'secondary'}>
-                                            {member.level}
-                                        </Badge>
-                                    )}
                                 </div>
                             ))}
+                            {!team?.members?.length && <p className="text-muted-foreground text-sm">No hay miembros aún.</p>}
                         </div>
                     </CardContent>
                 </Card>

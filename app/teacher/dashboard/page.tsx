@@ -61,6 +61,10 @@ export default function TeacherDashboard() {
     const [teams, setTeams] = useState<any[]>([])
     const [availableStudents, setAvailableStudents] = useState<any[]>([])
 
+    // Voting State
+    const [myVote, setMyVote] = useState<number | null>(null)
+    const [votingOpen, setVotingOpen] = useState(true)
+
     // Edit dialog state
     const [editDialog, setEditDialog] = useState(false)
     const [editingStudent, setEditingStudent] = useState<any>(null)
@@ -106,71 +110,39 @@ export default function TeacherDashboard() {
     }, [])
 
     async function checkAuth() {
-        // BYPASS AUTH FOR SCREENSHOTS
-        // const userProfile = await getCurrentUserProfile()
-        // if (!userProfile || userProfile.role !== 'teacher') {
-        //     router.push('/login')
-        //     return
-        // }
-
-        // Mock Profile
-        const mockProfile = {
-            id: 'mock-id',
-            full_name: 'Prof. Juan Martínez',
-            email: 'juan.martinez@edu.gva.es',
-            role: 'teacher',
-            tutor_group: '1º DAW',
-            is_tutor: true,
-            tutor_approved: false, // PENDING: Shows blocking screen
-            subjects: ['Programación', 'Entornos de Desarrollo']
+        const userProfile = await getCurrentUserProfile()
+        if (!userProfile || userProfile.role !== 'teacher') {
+            router.push('/login')
+            return
         }
 
-        if (!mockProfile.is_tutor) {
+        if (!userProfile.is_tutor) {
             router.push('/teacher/general')
             return
         }
 
-        setProfile(mockProfile)
-        loadData(mockProfile)
+        setProfile(userProfile)
+        loadData(userProfile)
     }
 
     async function loadData(userProfile: any) {
         setLoading(true)
+        try {
+            const pending = await getPendingStudents(userProfile.id)
+            const myStudentsData = await getMyStudents(userProfile.id)
+            const teamsData = await getTeams(userProfile.tutor_group.charAt(0)) // Wait, getTeams in lib might not take args?
+            const availableData = await getStudentsWithoutTeam(userProfile.tutor_group)
 
-        // MOCK DATA FOR SCREENSHOTS
-        const mockPending = [
-            { id: '1', full_name: 'David Gil', email: 'david@alu.edu.gva.es', cycle: '1º DAW' },
-            { id: '2', full_name: 'Elena Rostova', email: 'elena@alu.edu.gva.es', cycle: '1º DAW' }
-        ]
-
-        const mockStudents = [
-            { id: '3', full_name: 'Carlos Castaños', email: 'carlos@alu.edu.gva.es', cycle: '1º DAW', teams: { name: 'Equipo 1' } },
-            { id: '4', full_name: 'Ana García', email: 'ana@alu.edu.gva.es', cycle: '1º DAW', teams: { name: 'Equipo 1' } }
-        ]
-
-        const mockTeams = [
-            {
-                id: 't1',
-                name: 'Equipo 1',
-                status: 'READY',
-                members: [
-                    { id: '3', full_name: 'Carlos Castaños', cycle: '1º DAW' },
-                    { id: '4', full_name: 'Ana García', cycle: '1º DAW' },
-                    { id: '5', full_name: 'Juan Pérez', cycle: '1º DAM' },
-                    { id: '6', full_name: 'María López', cycle: '1º DAM' },
-                    { id: '7', full_name: 'Pedro Sánchez', cycle: '1º ASIR' },
-                    { id: '8', full_name: 'Laura Martín', cycle: '1º ASIR' }
-                ]
-            }
-        ]
-
-        const mockAvailable = []
-
-        setPendingStudents(mockPending)
-        setMyStudents(mockStudents)
-        setTeams(mockTeams)
-        setAvailableStudents(mockAvailable)
-        setLoading(false)
+            setPendingStudents(pending)
+            setMyStudents(myStudentsData)
+            setTeams(teamsData)
+            setAvailableStudents(availableData)
+        } catch (error) {
+            console.error('Error loading teacher data:', error)
+            toast.error('Error al cargar datos')
+        } finally {
+            setLoading(false)
+        }
     }
 
     async function handleApprove(studentId: string) {
@@ -238,15 +210,7 @@ export default function TeacherDashboard() {
         }
     }
 
-    function openEditDialog(student: any) {
-        setEditingStudent(student)
-        setEditForm({
-            full_name: student.full_name,
-            email: student.email,
-            cycle: student.cycle
-        })
-        setEditDialog(true)
-    }
+
 
     async function handleEdit() {
         try {

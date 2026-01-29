@@ -52,77 +52,30 @@ export default function AdminDashboard() {
     }, [])
 
     async function checkAuth() {
-        // BYPASS AUTH FOR SCREENSHOTS
-        // const profile = await getCurrentUserProfile()
-        // if (!profile || profile.role !== 'admin') {
-        //     router.push('/login')
-        // }
+        const profile = await getCurrentUserProfile()
+        if (!profile || profile.role !== 'admin') {
+            router.push('/login')
+        }
     }
 
     async function loadData() {
-        // MOCK DATA FOR SCREENSHOTS
-        setPendingTutors([
-            { id: 't1', full_name: 'Roberto Gómez', email: 'roberto@edu.gva.es', tutor_group: '2º DAI' }
-        ])
-        setApprovedTutors([
-            { id: 't2', full_name: 'Juan Martínez', email: 'juan@edu.gva.es', tutor_group: '1º DAW' },
-            { id: 't3', full_name: 'María López', email: 'maria@edu.gva.es', tutor_group: '1º DAM' }
-        ])
-        setEventConfig({ phase: 'desarrollo' })
-        setTeams([
-            {
-                id: 'team1',
-                name: 'Equipo 1 - 1º DAW',
-                year: 1, // Juniors
-                status: 'READY',
-                votes: 15,
-                members: [
-                    { id: 'm1', full_name: 'Carlos Castaños', cycle: '1º DAW', is_leader: true },
-                    { id: 'm2', full_name: 'Ana García', cycle: '1º DAW', is_leader: false },
-                    { id: 'm3', full_name: 'Juan Pérez', cycle: '1º DAM', is_leader: false },
-                    { id: 'm4', full_name: 'María López', cycle: '1º DAM', is_leader: false },
-                    { id: 'm5', full_name: 'Pedro Sánchez', cycle: '1º ASIR', is_leader: false },
-                    { id: 'm6', full_name: 'Laura Martín', cycle: '1º ASIR', is_leader: false }
-                ]
-            },
-            {
-                id: 'team2',
-                name: 'Equipo 2 - 1º DAM',
-                year: 1, // Juniors
-                status: 'PENDING',
-                votes: 5,
-                members: [
-                    { id: 'm7', full_name: 'David Gil', cycle: '1º DAW', is_leader: true },
-                    { id: 'm8', full_name: 'Elena Rostova', cycle: '1º DAW', is_leader: false }
-                ]
-            },
-            {
-                id: 'team3',
-                name: 'Equipo Alpha - 2º DAW',
-                year: 2, // Seniors
-                status: 'READY',
-                votes: 22,
-                members: [
-                    { id: 'm9', full_name: 'Sofía Rey', cycle: '2º DAW', is_leader: true },
-                    { id: 'm10', full_name: 'Miguel Ángel', cycle: '2º DAW', is_leader: false },
-                    { id: 'm11', full_name: 'Lucía B.', cycle: '2º DAM', is_leader: false },
-                    { id: 'm12', full_name: 'Pablo C.', cycle: '2º ASIR', is_leader: false }
-                ]
-            },
-            {
-                id: 'team4',
-                name: 'Equipo Beta - 2º DAM',
-                year: 2, // Seniors
-                status: 'READY',
-                votes: 18,
-                members: [
-                    { id: 'm13', full_name: 'Erik V.', cycle: '2º DAM', is_leader: true },
-                    { id: 'm14', full_name: 'Raquel M.', cycle: '2º DAM', is_leader: false },
-                    { id: 'm15', full_name: 'Jorge L.', cycle: '2º ASIR', is_leader: false }
-                ]
-            }
-        ])
-        setLoading(false)
+        setLoading(true)
+        try {
+            const pending = await getPendingTutors()
+            const approved = await getApprovedTutors()
+            const config = await getEventConfig()
+            const allTeams = await getAllTeamsWithStats()
+
+            setPendingTutors(pending)
+            setApprovedTutors(approved)
+            setEventConfig(config)
+            setTeams(allTeams)
+        } catch (error) {
+            console.error('Error loading admin data:', error)
+            toast.error('Error al cargar datos')
+        } finally {
+            setLoading(false)
+        }
     }
 
     async function handleApproveTutor(tutorId: string) {
