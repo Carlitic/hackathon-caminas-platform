@@ -40,6 +40,17 @@ import {
     removeStudentFromTeam,
     createTeam
 } from "@/lib/teacher"
+import { toast } from "sonner"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function TeacherDashboard() {
     const router = useRouter()
@@ -55,50 +66,111 @@ export default function TeacherDashboard() {
     const [editingStudent, setEditingStudent] = useState<any>(null)
     const [editForm, setEditForm] = useState({ full_name: "", email: "", cycle: "" })
 
+    // Confirmation Dialog State
+    const [actionToConfirm, setActionToConfirm] = useState<{
+        type: 'deny' | 'delete' | 'remove_from_team' | 'vote',
+        data: any,
+        title: string,
+        description: string
+    } | null>(null)
+
+    // Requirements State
+    const [requirements, setRequirements] = useState<any[]>([
+        { id: 1, title: "Script SQL Normalizado", desc: "El proyecto debe incluir el script de creación de la BBDD con al menos 3 tablas relacionadas.", tag: "Bases de Datos" },
+        { id: 2, title: "Diagrama E-R", desc: "Se debe entregar el diagrama entidad-relación en formato PDF.", tag: "Bases de Datos" }
+    ])
+    const [reqDialog, setReqDialog] = useState(false)
+    const [reqForm, setReqForm] = useState({ title: "", description: "" })
+
+    function handleCreateRequirement() {
+        if (!reqForm.title || !reqForm.description) {
+            toast.error("Rellena todos los campos")
+            return
+        }
+
+        const newReq = {
+            id: Date.now(),
+            title: reqForm.title,
+            desc: reqForm.description,
+            tag: profile?.subjects?.[0] || "General"
+        }
+
+        setRequirements([...requirements, newReq])
+        setReqDialog(false)
+        setReqForm({ title: "", description: "" })
+        toast.success("Requisito creado correctamente")
+    }
+
     useEffect(() => {
         checkAuth()
     }, [])
 
     async function checkAuth() {
-        const userProfile = await getCurrentUserProfile()
-        if (!userProfile || userProfile.role !== 'teacher') {
-            router.push('/login')
+        // BYPASS AUTH FOR SCREENSHOTS
+        // const userProfile = await getCurrentUserProfile()
+        // if (!userProfile || userProfile.role !== 'teacher') {
+        //     router.push('/login')
+        //     return
+        // }
+
+        // Mock Profile
+        const mockProfile = {
+            id: 'mock-id',
+            full_name: 'Prof. Juan Martínez',
+            email: 'juan.martinez@edu.gva.es',
+            role: 'teacher',
+            tutor_group: '1º DAW',
+            is_tutor: true,
+            tutor_approved: false, // PENDING: Shows blocking screen
+            subjects: ['Programación', 'Entornos de Desarrollo']
+        }
+
+        if (!mockProfile.is_tutor) {
+            router.push('/teacher/general')
             return
         }
 
-        // Check if tutor is approved
-        if (userProfile.is_tutor && !userProfile.tutor_approved) {
-            alert('Tu solicitud de tutor está pendiente de aprobación por el administrador.')
-            router.push('/')
-            return
-        }
-
-        setProfile(userProfile)
-        loadData(userProfile)
+        setProfile(mockProfile)
+        loadData(mockProfile)
     }
 
     async function loadData(userProfile: any) {
-        try {
-            setLoading(true)
+        setLoading(true)
 
-            if (userProfile.is_tutor) {
-                const [pending, students, teamsData, available] = await Promise.all([
-                    getPendingStudents(userProfile.id),
-                    getMyStudents(userProfile.id),
-                    getTeams(),
-                    getStudentsWithoutTeam(userProfile.tutor_group)
-                ])
+        // MOCK DATA FOR SCREENSHOTS
+        const mockPending = [
+            { id: '1', full_name: 'David Gil', email: 'david@alu.edu.gva.es', cycle: '1º DAW' },
+            { id: '2', full_name: 'Elena Rostova', email: 'elena@alu.edu.gva.es', cycle: '1º DAW' }
+        ]
 
-                setPendingStudents(pending)
-                setMyStudents(students)
-                setTeams(teamsData)
-                setAvailableStudents(available)
+        const mockStudents = [
+            { id: '3', full_name: 'Carlos Castaños', email: 'carlos@alu.edu.gva.es', cycle: '1º DAW', teams: { name: 'Equipo 1' } },
+            { id: '4', full_name: 'Ana García', email: 'ana@alu.edu.gva.es', cycle: '1º DAW', teams: { name: 'Equipo 1' } }
+        ]
+
+        const mockTeams = [
+            {
+                id: 't1',
+                name: 'Equipo 1',
+                status: 'READY',
+                members: [
+                    { id: '3', full_name: 'Carlos Castaños', cycle: '1º DAW' },
+                    { id: '4', full_name: 'Ana García', cycle: '1º DAW' },
+                    { id: '5', full_name: 'Juan Pérez', cycle: '1º DAM' },
+                    { id: '6', full_name: 'María López', cycle: '1º DAM' },
+                    { id: '7', full_name: 'Pedro Sánchez', cycle: '1º ASIR' },
+                    { id: '8', full_name: 'Laura Martín', cycle: '1º ASIR' }
+                ]
             }
-        } catch (error) {
-            console.error('Error loading data:', error)
-        } finally {
-            setLoading(false)
-        }
+        ]
+
+        const mockAvailable = []
+
+        setPendingStudents(mockPending)
+        setMyStudents(mockStudents)
+        setTeams(mockTeams)
+        setAvailableStudents(mockAvailable)
+        setLoading(false)
     }
 
     async function handleApprove(studentId: string) {
@@ -133,14 +205,57 @@ export default function TeacherDashboard() {
         setEditDialog(true)
     }
 
+    function confirmDelete(studentId: string, studentName: string) {
+        setActionToConfirm({
+            type: 'delete',
+            data: studentId,
+            title: '¿Eliminar alumno?',
+            description: `¿Estás seguro de eliminar a ${studentName}? Esta acción no se puede deshacer.`
+        })
+    }
+
+    async function executeConfirmedAction() {
+        if (!actionToConfirm) return
+
+        try {
+            if (actionToConfirm.type === 'deny') {
+                await denyStudent(actionToConfirm.data)
+                toast.success('Solicitud denegada')
+            } else if (actionToConfirm.type === 'delete') {
+                await deleteStudent(actionToConfirm.data)
+                toast.success('Alumno eliminado')
+            } else if (actionToConfirm.type === 'vote') {
+                // Mock vote submission
+                setMyVote(actionToConfirm.data)
+                toast.success(`Voto registrado para el Equipo ${actionToConfirm.data}`)
+                // In real app, we would save this to DB and disable further voting
+            }
+            loadData(profile)
+        } catch (error: any) {
+            toast.error(`Error: ${error.message}`)
+        } finally {
+            setActionToConfirm(null)
+        }
+    }
+
+    function openEditDialog(student: any) {
+        setEditingStudent(student)
+        setEditForm({
+            full_name: student.full_name,
+            email: student.email,
+            cycle: student.cycle
+        })
+        setEditDialog(true)
+    }
+
     async function handleEdit() {
         try {
             await updateStudent(editingStudent.id, editForm)
-            alert('Alumno actualizado')
+            toast.success('Alumno actualizado')
             setEditDialog(false)
             loadData(profile)
         } catch (error: any) {
-            alert(`Error: ${error.message}`)
+            toast.error(`Error: ${error.message}`)
         }
     }
 
@@ -197,26 +312,140 @@ export default function TeacherDashboard() {
 
     if (!profile?.is_tutor) {
         return (
-            <div className="flex min-h-screen items-center justify-center p-4">
-                <Card className="max-w-md">
-                    <CardHeader>
-                        <CardTitle>Acceso Restringido</CardTitle>
-                        <CardDescription>
-                            Solo los tutores tienen acceso a este dashboard.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Button onClick={() => router.push('/')}>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
+                <div className="max-w-7xl mx-auto space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight">Panel de Profesor</h1>
+                            <p className="text-muted-foreground">
+                                {profile?.full_name} - {profile?.subjects?.join(', ') || 'Departamento de Informática'}
+                            </p>
+                        </div>
+                        <Button variant="outline" onClick={() => router.push('/')}>
                             Volver al Inicio
                         </Button>
-                    </CardContent>
-                </Card>
+                    </div>
+
+                    <Tabs defaultValue="requirements" className="space-y-4">
+                        <TabsList>
+                            <TabsTrigger value="requirements">Gestión de Requisitos</TabsTrigger>
+                            <TabsTrigger value="voting">Votación de Proyectos</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="requirements" className="space-y-4">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle>Requisitos de la Asignatura</CardTitle>
+                                        <CardDescription>Define los criterios que los alumnos deben cumplir para aprobar tu módulo.</CardDescription>
+                                    </div>
+                                    <Button onClick={() => setReqDialog(true)}>
+                                        <UserPlus className="mr-2 h-4 w-4" />
+                                        Nuevo Requisito
+                                    </Button>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        {requirements.map((req, i) => (
+                                            <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
+                                                <div>
+                                                    <h4 className="font-semibold">{req.title}</h4>
+                                                    <p className="text-sm text-muted-foreground">{req.desc}</p>
+                                                </div>
+                                                <Badge variant="outline">{req.tag}</Badge>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        <TabsContent value="voting" className="space-y-4">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle>Evaluar Proyectos</CardTitle>
+                                        <CardDescription>
+                                            {votingOpen
+                                                ? "La fase de votación está ABIERTA. Puedes cambiar tu voto."
+                                                : "La fase de votación está CERRADA. Tu voto es definitivo."}
+                                        </CardDescription>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant={votingOpen ? "default" : "destructive"}>
+                                            {votingOpen ? "Votación Activa" : "Votación Finalizada"}
+                                        </Badge>
+                                        {/* SIMULATION TOGGLE */}
+                                        <Button size="xs" variant="outline" onClick={() => setVotingOpen(!votingOpen)}>
+                                            {votingOpen ? "Simular Cierre" : "Simular Apertura"}
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                        {[1, 2, 3, 4, 5].map((teamNum) => {
+                                            const isMyVote = myVote === teamNum
+                                            return (
+                                                <Card key={teamNum} className={`transition-all ${isMyVote ? 'ring-2 ring-primary bg-primary/5' : ''}`}>
+                                                    <CardHeader>
+                                                        <CardTitle className="text-lg flex justify-between items-center">
+                                                            Equipo {teamNum}
+                                                            {isMyVote && <Badge>Tu Voto</Badge>}
+                                                        </CardTitle>
+                                                        <CardDescription>Proyecto Hackathon</CardDescription>
+                                                    </CardHeader>
+                                                    <CardContent>
+                                                        <Button
+                                                            className="w-full"
+                                                            variant={isMyVote ? "secondary" : "default"}
+                                                            disabled={(!votingOpen && !isMyVote) || (votingOpen && isMyVote)}
+                                                            onClick={() => {
+                                                                if (isMyVote) return
+                                                                setActionToConfirm({
+                                                                    type: 'vote',
+                                                                    data: teamNum,
+                                                                    title: myVote ? '¿Cambiar Voto?' : 'Confirmar Voto',
+                                                                    description: myVote
+                                                                        ? `Vas a cambiar tu voto del Equipo ${myVote} al Equipo ${teamNum}. ¿Estás seguro?`
+                                                                        : `Vas a votar al Equipo ${teamNum}. Podrás cambiarlo mientras la votación siga abierta.`
+                                                                })
+                                                            }}
+                                                        >
+                                                            {isMyVote
+                                                                ? 'Votado'
+                                                                : (!votingOpen ? 'Votación Cerrada' : (myVote ? 'Cambiar Voto' : 'Votar por este equipo'))}
+                                                        </Button>
+                                                    </CardContent>
+                                                </Card>
+                                            )
+                                        })}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    </Tabs>
+                </div>
             </div>
         )
     }
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
+            <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => !open && setActionToConfirm(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{actionToConfirm?.title}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {actionToConfirm?.description}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={executeConfirmedAction}>Continuar</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             <div className="max-w-7xl mx-auto space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
@@ -411,7 +640,7 @@ export default function TeacherDashboard() {
                                                     <div className="flex items-center justify-between mb-2">
                                                         <h3 className="font-semibold">{team.name}</h3>
                                                         <Badge variant={team.status === 'READY' ? 'default' : 'secondary'}>
-                                                            {team.status}
+                                                            {team.status === 'READY' ? 'LISTO' : 'PENDIENTE'}
                                                         </Badge>
                                                     </div>
                                                     <p className="text-sm text-muted-foreground mb-2">

@@ -8,6 +8,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Users, Github, Mail, AlertCircle, Copy, LifeBuoy } from "lucide-react"
 import Certificate from "@/components/Certificate"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { toast } from "sonner"
 
 export default function StudentTeamPage() {
     // Mock Data - Team with all 1st year students (2 from each cycle)
@@ -41,10 +50,43 @@ export default function StudentTeamPage() {
                     <p className="text-muted-foreground">Gestiona tu equipo y entregas para la Hackathon.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="destructive" className="gap-2" title="Registra una solicitud de ayuda visible para los profesores">
-                        <LifeBuoy className="h-4 w-4" />
-                        Solicitar Ayuda (Comodín)
-                    </Button>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="destructive" className="gap-2">
+                                <LifeBuoy className="h-4 w-4" />
+                                Solicitar Ayuda (Comodín)
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Solicitar Ayuda a un Profesor</DialogTitle>
+                                <DialogDescription>
+                                    Elige un profesor disponible para pedir ayuda con tu proyecto.
+                                    Recuerda que solo tienes 3 comodines.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid gap-2">
+                                    <Label>Selecciona un Profesor:</Label>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {['Prof. Juan Martínez (DAW)', 'Prof. María López (DAM)', 'Prof. Pedro Sánchez (ASIR)', 'Prof. Elena Rostova (Sistemas)'].map((teacher) => (
+                                            <Button
+                                                key={teacher}
+                                                variant="outline"
+                                                className="justify-start text-left h-auto py-3"
+                                                onClick={() => {
+                                                    toast.success(`Ayuda solicitada a ${teacher}`)
+                                                }}
+                                            >
+                                                <Users className="mr-2 h-4 w-4" />
+                                                {teacher}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </header>
 
@@ -63,7 +105,7 @@ export default function StudentTeamPage() {
             <div className="bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-4 rounded">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="font-bold text-yellow-700 dark:text-yellow-500">Estado: PENDING</p>
+                        <p className="font-bold text-yellow-700 dark:text-yellow-500">Estado: PENDIENTE</p>
                         <p className="text-sm text-yellow-600 dark:text-yellow-400">Faltan 2 miembros para completar el equipo. No podéis entregar aún.</p>
                     </div>
                 </div>

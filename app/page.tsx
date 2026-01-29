@@ -9,10 +9,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
-      {/* Theme Toggle - Fixed top right */}
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
 
       <main className="flex-1">
         {/* Hero Section */}
@@ -56,29 +52,40 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* DEMO ACCESS - Quick links for testing */}
-            <div className="mt-8 p-4 border border-dashed border-amber-300 rounded-lg bg-amber-50 dark:bg-amber-900/20 max-w-md w-full">
+            {/* DEMO ACCESS - Central Hub for Screenshots */}
+            <div className="mt-8 p-4 border border-dashed border-amber-300 rounded-lg bg-amber-50 dark:bg-amber-900/20 max-w-2xl w-full">
               <p className="text-xs font-bold text-amber-600 dark:text-amber-500 mb-3 uppercase tracking-wide text-center">
-                Acceso Rápido (Demo)
+                Acceso Rápido (Mapa del Sitio)
               </p>
               <div className="flex flex-wrap gap-2 justify-center">
+                <Link href="/login">
+                  <Badge variant="secondary" className="cursor-pointer hover:bg-slate-200">🔐 Login</Badge>
+                </Link>
+                <Link href="/register">
+                  <Badge variant="secondary" className="cursor-pointer hover:bg-slate-200">📝 Reg Alumno</Badge>
+                </Link>
+                <Link href="/register/teacher">
+                  <Badge variant="secondary" className="cursor-pointer hover:bg-slate-200">👨‍🏫 Reg Profe</Badge>
+                </Link>
                 <Link href="/student/team">
-                  <Badge variant="outline" className="hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer">
-                    👨‍🎓 Vista Alumno
-                  </Badge>
+                  <Badge variant="outline" className="hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer">👨‍🎓 Dshb Alumno</Badge>
                 </Link>
                 <Link href="/teacher/dashboard">
-                  <Badge variant="outline" className="hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer">
-                    👨‍🏫 Vista Profesor
-                  </Badge>
+                  <Badge variant="outline" className="hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer">👨‍🏫 Dshb Tutor</Badge>
+                </Link>
+                <Link href="/teacher/general">
+                  <Badge variant="outline" className="hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer">👨‍🏫 Dshb Profe</Badge>
                 </Link>
                 <Link href="/admin/dashboard">
-                  <Badge variant="outline" className="hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer">
-                    🛠️ Vista Admin
-                  </Badge>
+                  <Badge variant="outline" className="hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer">🛠️ Dshb Admin</Badge>
+                </Link>
+                <Link href="/ranking">
+                  <Badge variant="outline" className="hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer">🏆 Ranking</Badge>
                 </Link>
               </div>
             </div>
+
+
           </div>
         </section>
 
@@ -125,7 +132,7 @@ export default function Home() {
       <footer className="py-6 md:px-8 md:py-0 border-t">
         <div className="container flex flex-col items-start justify-start gap-4 md:h-24 px-4">
           <p className="text-left text-sm leading-loose text-muted-foreground">
-            Built for IES El Caminàs.
+            Creado para IES El Caminàs.
           </p>
         </div>
       </footer>

@@ -25,14 +25,24 @@ export default function RegisterTeacherPage() {
     })
 
     const availableSubjects = [
-        "Desarrollo Web",
-        "Bases de Datos",
         "Programación",
+        "Desarrollo Web en Entorno Cliente",
+        "Desarrollo Web en Entorno Servidor",
+        "Diseño de Interfaces Web",
+        "Bases de Datos",
         "Sistemas Informáticos",
-        "Redes",
-        "Seguridad Informática",
-        "Desarrollo Móvil",
-        "Lenguajes de Marcas"
+        "Lenguajes de Marcas y Sistemas de Gestión de Información",
+        "Entornos de Desarrollo",
+        "Acceso a Datos",
+        "Programación de Servicios y Procesos",
+        "Sistemas de Gestión Empresarial",
+        "Implantación de Sistemas Operativos",
+        "Gestión de Bases de Datos",
+        "Administración de Sistemas Operativos",
+        "Seguridad y Alta Disponibilidad",
+        "Servicios de Red e Internet",
+        "Planificación y Administración de Redes",
+        "Fundamentos de Hardware"
     ]
 
     function toggleSubject(subject: string) {

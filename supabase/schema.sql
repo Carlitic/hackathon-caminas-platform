@@ -127,6 +127,15 @@ CREATE POLICY "Teachers can read student profiles" ON profiles
 CREATE POLICY "Anyone can read teams" ON teams
   FOR SELECT TO authenticated USING (true);
 
+CREATE POLICY "Teachers can create teams" ON teams
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.role = 'teacher'
+    )
+  );
+
 CREATE POLICY "Teachers can update teams" ON teams
   FOR UPDATE USING (
     EXISTS (
