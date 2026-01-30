@@ -52,9 +52,11 @@ export default function AdminDashboard() {
     }, [])
 
     async function checkAuth() {
+        alert("DEBUG: Admin checkAuth executing...")
         const profile = await getCurrentUserProfile()
         if (!profile || profile.role !== 'admin') {
-            router.push('/login')
+            alert("DEBUG: Admin check failed. Profile: " + JSON.stringify(profile))
+            // router.push('/login') // Disable redirect for debug
         }
     }
 
