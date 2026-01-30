@@ -30,7 +30,7 @@ export default function LoginPage() {
         setLoading(false)
 
         if (result.success && result.profile) {
-            alert(`Login éxitoso. Rol: ${result.profile.role}. Redirigiendo...`)
+            router.refresh() // Sync cookies with server
             // Redirect based on role
             if (result.profile.role === 'student') {
                 router.push('/student/team')
