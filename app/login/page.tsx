@@ -30,15 +30,12 @@ export default function LoginPage() {
         setLoading(false)
 
         if (result.success && result.profile) {
-            router.refresh() // Sync cookies with server
-            // Redirect based on role
-            if (result.profile.role === 'student') {
-                router.push('/student/team')
-            } else if (result.profile.role === 'teacher') {
-                router.push('/teacher/dashboard')
-            } else if (result.profile.role === 'admin') {
-                router.push('/admin/dashboard')
-            }
+            // Force full page reload to ensure cookies are seen by middleware
+            const target = result.profile.role === 'admin' ? '/admin/dashboard' :
+                result.profile.role === 'teacher' ? '/teacher/dashboard' :
+                    '/student/team';
+
+            window.location.href = target;
         } else {
             console.error('Login error:', result.error)
             alert(`Error: ${result.error || 'No se pudo cargar el perfil del usuario. Verifica tu conexión o contacta con soporte.'}`)
