@@ -39,7 +39,8 @@ export default function LoginPage() {
                 router.push('/admin/dashboard')
             }
         } else {
-            alert(`Error: ${result.error}`)
+            console.error('Login error:', result.error)
+            alert(`Error: ${result.error || 'No se pudo cargar el perfil del usuario. Verifica tu conexión o contacta con soporte.'}`)
         }
     }
 
