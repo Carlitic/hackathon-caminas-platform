@@ -50,10 +50,11 @@ export default function DashboardRouter() {
                 console.error("Logout failed:", e)
             }
 
-            // Redirect after delay
-            setTimeout(() => {
-                window.location.href = "/login"
-            }, 3000)
+            // Redirect after delay - DISABLED FOR DEBUGGING
+            // setTimeout(() => {
+            //     window.location.href = "/login"
+            // }, 3000)
+            setStatus("Error crítico: No se puede cargar tu perfil. Revisa el error arriba.")
         }
     }
 
