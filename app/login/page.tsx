@@ -29,13 +29,10 @@ export default function LoginPage() {
 
         setLoading(false)
 
-        if (result.success && result.profile) {
+        if (result.success) {
             // Force full page reload to ensure cookies are seen by middleware
-            const target = result.profile.role === 'admin' ? '/admin/dashboard' :
-                result.profile.role === 'teacher' ? '/teacher/dashboard' :
-                    '/student/team';
-
-            window.location.href = target;
+            // Redirect to /dashboard which handles role-based routing centralized
+            window.location.href = '/dashboard';
         } else {
             console.error('Login error:', result.error)
             alert(`Error: ${result.error || 'No se pudo cargar el perfil del usuario. Verifica tu conexión o contacta con soporte.'}`)
