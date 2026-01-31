@@ -53,11 +53,11 @@ export async function updateSession(request: NextRequest) {
     const isPublicPath = publicPaths.some(p => path === p || path.startsWith('/auth'))
 
     // 1. If user is NOT logged in and tries to access a protected route
-    // if (!user && !isPublicPath) {
-    //     const url = request.nextUrl.clone()
-    //     url.pathname = '/login'
-    //     return NextResponse.redirect(url)
-    // }
+    if (!user && !isPublicPath) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        return NextResponse.redirect(url)
+    }
 
     // 2. If user IS logged in and tries to access auth pages (login/register)
     if (user && (path === '/login' || path === '/register' || path === '/register/teacher')) {
