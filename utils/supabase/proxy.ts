@@ -66,7 +66,7 @@ export async function updateSession(request: NextRequest) {
         // For now, let's redirect to landing, or better, check if we can get metadata.
         // Actually, preventing /login access is good UX.
         const url = request.nextUrl.clone()
-        url.pathname = '/' // Helper page or landing that will redirect based on CheckAuth client-side
+        url.pathname = '/dashboard' // Redirect to the router page which handles role-based access
         return NextResponse.redirect(url)
     }
 
