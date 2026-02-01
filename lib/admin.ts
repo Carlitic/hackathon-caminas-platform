@@ -23,6 +23,55 @@ export async function repairAdminProfile() {
     }
 }
 
+// Repair Teacher Profile (Self-Service)
+export async function repairTeacherProfile() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error("No hay usuario autenticado")
+
+        const { error } = await supabase
+            .from('profiles')
+            .upsert({
+                id: user.id,
+                email: user.email!,
+                full_name: 'Profesor (Recuperado)',
+                role: 'teacher',
+                is_tutor: false,
+                subjects: ['General'],
+                approval_status: 'approved'
+            })
+
+        if (error) throw error
+        return { success: true }
+    } catch (error: any) {
+        return { success: false, error: error.message }
+    }
+}
+
+// Repair Student Profile (Self-Service)
+export async function repairStudentProfile() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error("No hay usuario autenticado")
+
+        const { error } = await supabase
+            .from('profiles')
+            .upsert({
+                id: user.id,
+                email: user.email!,
+                full_name: 'Estudiante (Recuperado)',
+                role: 'student',
+                cycle: 'DAW', // Default fallback
+                approval_status: 'pending' // Require teacher approval
+            })
+
+        if (error) throw error
+        return { success: true }
+    } catch (error: any) {
+        return { success: false, error: error.message }
+    }
+}
+
 // Get pending tutor approvals
 export async function getPendingTutors() {
     const { data, error } = await supabase

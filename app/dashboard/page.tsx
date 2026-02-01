@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUserProfile, logout } from "@/lib/auth"
-import { repairAdminProfile } from "@/lib/admin"
+import { repairAdminProfile, repairTeacherProfile, repairStudentProfile } from "@/lib/admin"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 
@@ -54,12 +54,18 @@ export default function DashboardRouter() {
         window.location.href = "/login"
     }
 
-    async function handleRepairAdmin() {
-        if (!confirm("¿Seguro que eres el Administrador? Esto restaurará tu perfil como Admin.")) return
+    async function handleRepair(role: 'admin' | 'teacher' | 'student') {
+        const roleName = role === 'admin' ? 'Administrador' : role === 'teacher' ? 'Profesor' : 'Estudiante';
 
-        setStatus("Reparando perfil de Administrador...")
+        if (!confirm(`¿Seguro que eres ${roleName}? Esto restaurará tu perfil.`)) return
+
+        setStatus(`Reparando perfil de ${roleName}...`)
+
+        let result;
         try {
-            const result = await repairAdminProfile()
+            if (role === 'admin') result = await repairAdminProfile();
+            else if (role === 'teacher') result = await repairTeacherProfile();
+            else result = await repairStudentProfile();
 
             if (result.success) {
                 toast.success("Perfil reparado. Redirigiendo...")
@@ -106,16 +112,18 @@ export default function DashboardRouter() {
 
                         <div className="relative flex py-2 items-center">
                             <div className="flex-grow border-t border-gray-200"></div>
-                            <span className="flex-shrink-0 mx-2 text-gray-400 text-xs">O</span>
+                            <span className="flex-shrink-0 mx-2 text-gray-400 text-xs">O RECUPERAR COMO</span>
                             <div className="flex-grow border-t border-gray-200"></div>
                         </div>
 
-                        <Button
-                            variant="outline"
-                            onClick={handleRepairAdmin}
-                            className="w-full border-dashed border-primary/50 text-primary hover:bg-primary/5"
-                        >
-                            🛠️ Soy el Admin (Autoreparar Cuenta)
+                        <Button variant="outline" onClick={() => handleRepair('admin')} className="w-full border-dashed border-red-500/50 text-red-600 hover:bg-red-50">
+                            🛠️ Soy Admin
+                        </Button>
+                        <Button variant="outline" onClick={() => handleRepair('teacher')} className="w-full border-dashed border-blue-500/50 text-blue-600 hover:bg-blue-50">
+                            👨‍🏫 Soy Profesor
+                        </Button>
+                        <Button variant="outline" onClick={() => handleRepair('student')} className="w-full border-dashed border-green-500/50 text-green-600 hover:bg-green-50">
+                            🎓 Soy Alumno
                         </Button>
                     </div>
                 )}
