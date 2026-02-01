@@ -1,5 +1,28 @@
 import { supabase } from './supabase'
 
+// Repair Admin Profile (Self-Service)
+export async function repairAdminProfile() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error("No hay usuario autenticado")
+
+        const { error } = await supabase
+            .from('profiles')
+            .upsert({
+                id: user.id,
+                email: user.email!,
+                full_name: 'Administrador (Recuperado)',
+                role: 'admin',
+                approval_status: 'approved'
+            })
+
+        if (error) throw error
+        return { success: true }
+    } catch (error: any) {
+        return { success: false, error: error.message }
+    }
+}
+
 // Get pending tutor approvals
 export async function getPendingTutors() {
     const { data, error } = await supabase
