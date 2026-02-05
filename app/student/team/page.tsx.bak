@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { getTeamWildcardsStatus, createSupportTicket } from "@/lib/wildcards"
-import { Textarea } from "@/components/ui/textarea"
 
 export default function StudentTeamPage() {
     const [loading, setLoading] = useState(true)
@@ -96,8 +95,16 @@ export default function StudentTeamPage() {
 
     // Helper to build the visual team slots
     const teamSlots = requiredRoles.map((role, index) => {
-        const cycle = role
+        // Try to find a member that fits this slot (and hasn't been used yet)
+        // ideally logic should be robust, for now we map sequentially or by strict cycle match
+        // A simple approach: Filter members by cycle, take the n-th one.
+        const cycle = role // e.g., "1º DAW"
         const membersInCycle = team?.members?.filter((m: any) => m.cycle === cycle) || []
+
+        // We need to distribute them. 
+        // If index is 0 or 1, it's DAW. 0 -> first DAW, 1 -> second DAW.
+        // If index is 2 or 3, it's DAM.
+        // If index is 4 or 5, it's ASIR.
 
         let member = null
         if (role.includes("DAW")) member = membersInCycle[index % 2]
@@ -131,41 +138,43 @@ export default function StudentTeamPage() {
                         Salir
                     </Button>
 
-                    <Dialog open={helpDialogOpen} onOpenChange={setHelpDialogOpen}>
+                    <Dialog>
                         <DialogTrigger asChild>
-                            <Button
-                                variant="destructive"
-                                className="gap-2"
-                                disabled={wildcardStatus.remaining === 0 || !team}
-                            >
+                            <Button variant="destructive" className="gap-2">
                                 <LifeBuoy className="h-4 w-4" />
-                                Solicitar Ayuda ({wildcardStatus.remaining}/{wildcardStatus.max})
+                                Solicitar Ayuda (Comodín)
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Solicitar Ayuda (Comodín)</DialogTitle>
+                                <DialogTitle>Solicitar Ayuda a un Profesor</DialogTitle>
                                 <DialogDescription>
-                                    Describe tu problema y un profesor te ayudará. Comodines disponibles hoy: <strong>{wildcardStatus.remaining}/{wildcardStatus.max}</strong>
+                                    Elige un profesor disponible para pedir ayuda con tu proyecto.
+                                    Recuerda que solo tienes 3 comodines.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="help-message">Describe tu problema:</Label>
-                                    <Textarea
-                                        id="help-message"
-                                        className="min-h-[100px]"
-                                        placeholder="Ej: No podemos conectar con la API de..."
-                                        value={helpMessage}
-                                        onChange={(e) => setHelpMessage(e.target.value)}
-                                    />
+                                    <Label>Selecciona un Profesor:</Label>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {teachers.map((teacher: any) => (
+                                            <Button
+                                                key={teacher.id}
+                                                variant="outline"
+                                                className="justify-start text-left h-auto py-3"
+                                                onClick={() => {
+                                                    toast.success(`Ayuda solicitada a ${teacher.full_name}`)
+                                                }}
+                                            >
+                                                <Users className="mr-2 h-4 w-4" />
+                                                <div className="flex flex-col items-start">
+                                                    <span>{teacher.full_name}</span>
+                                                    <span className="text-xs text-muted-foreground">{teacher.subjects?.[0]}</span>
+                                                </div>
+                                            </Button>
+                                        ))}
+                                    </div>
                                 </div>
-                                <Button
-                                    onClick={handleRequestHelp}
-                                    disabled={wildcardStatus.remaining === 0 || !helpMessage.trim()}
-                                >
-                                    Enviar Solicitud
-                                </Button>
                             </div>
                         </DialogContent>
                     </Dialog>
@@ -220,26 +229,58 @@ export default function StudentTeamPage() {
                     </CardContent>
                 </Card>
 
-                {/* GitHub URL Card */}
+                {/* GitHub Submission */}
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Github className="h-5 w-5" />
-                            Repositorio del Proyecto
+                            <Github className="h-5 w-5" /> Entrega de Repositorio
                         </CardTitle>
-                        <CardDescription>Enlace público de GitHub donde está alojado tu código.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                         <div className="flex gap-2">
                             <Input
                                 placeholder="https://github.com/..."
-                                defaultValue={team?.github_url || ""}
+                                defaultValue={team?.github_url || ''}
+                                disabled={!isTeamReady}
                             />
+                            <Button disabled={!isTeamReady}>Guardar</Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            El repositorio solo se puede vincular cuando el equipo esté completo (READY).
+                        </p>
+                    </CardContent>
+                </Card>
+
+                {/* Members Details */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Miembros del Equipo</CardTitle>
+                        <CardDescription>Detalles de contacto.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {team?.members?.map((member: any) => (
+                                <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900">
+                                    <div className="flex items-center gap-4">
+                                        <Avatar>
+                                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                                {member.full_name.charAt(0)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-semibold">{member.full_name}</p>
+                                            <p className="text-sm text-muted-foreground">{member.cycle}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <Mail className="h-3 w-3 text-muted-foreground" />
+                                                <p className="text-xs text-muted-foreground">{member.email}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            {!team?.members?.length && <p className="text-muted-foreground text-sm">No hay miembros aún.</p>}
                         </div>
                     </CardContent>
-                    <CardFooter>
-                        <Button className="w-full">Guardar URL</Button>
-                    </CardFooter>
                 </Card>
             </div>
         </div>

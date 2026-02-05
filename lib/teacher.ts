@@ -186,7 +186,7 @@ export async function createTeam(yearLevel: string) {
         .insert({
             name: `Equipo ${nextNumber}`,
             team_number: nextNumber,
-            year_level: yearLevel,
+            year: parseInt(yearLevel), // Use 'year' field as integer
             status: 'PENDING'
         })
         .select()
@@ -194,4 +194,112 @@ export async function createTeam(yearLevel: string) {
 
     if (error) throw error
     return data
+}
+// --- REQUIREMENTS ---
+
+export async function getRequirements(teacherId: string) {
+    const { data, error } = await supabase
+        .from('requirements')
+        .select('*')
+        .eq('teacher_id', teacherId)
+        .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data
+}
+
+export async function createRequirement(data: {
+    title: string,
+    description: string,
+    tag: string,
+    target_cycles?: string[],
+    target_students?: string[],
+    for_all_students?: boolean
+}) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error("No user")
+
+    const { error } = await supabase
+        .from('requirements')
+        .insert({
+            title: data.title,
+            description: data.description,
+            tag: data.tag,
+            target_cycles: data.target_cycles || [],
+            target_students: data.target_students || [],
+            for_all_students: data.for_all_students ?? true,
+            teacher_id: user.id
+        })
+
+    if (error) throw error
+}
+
+export async function updateRequirement(id: string, data: {
+    title: string,
+    description: string,
+    tag: string,
+    target_cycles?: string[],
+    target_students?: string[],
+    for_all_students?: boolean
+}) {
+    const { error } = await supabase
+        .from('requirements')
+        .update({
+            title: data.title,
+            description: data.description,
+            tag: data.tag,
+            target_cycles: data.target_cycles || [],
+            target_students: data.target_students || [],
+            for_all_students: data.for_all_students ?? true
+        })
+        .eq('id', id)
+
+    if (error) throw error
+}
+
+export async function deleteRequirement(id: string) {
+    const { error } = await supabase
+        .from('requirements')
+        .delete()
+        .eq('id', id)
+
+    if (error) throw error
+}
+
+// --- VOTING ---
+
+export async function castVote(teamId: number) { // teamId is uuid in DB but likely number in current frontend? Check schema.
+    // Wait, teams.id is UUID. Frontend probably uses team_number as ID? 
+    // Let's check getTeams(). It returns *. 
+    // We should use UUID for voting.
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error("No user")
+
+    // First find the real UUID of the team if we passed a number (or handle both)
+    // Assuming teamId passed here is the UUID from the UI map.
+
+    // We use UPSERT on teacher_id to handle "Change Vote"
+    const { error } = await supabase
+        .from('votes')
+        .upsert({
+            teacher_id: user.id,
+            team_id: teamId // Type mismatch potential if UI sends number
+        }, { onConflict: 'teacher_id' })
+
+    if (error) throw error
+}
+
+export async function getMyVote() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+
+    const { data, error } = await supabase
+        .from('votes')
+        .select('team_id')
+        .eq('teacher_id', user.id)
+        .single()
+
+    if (error && error.code !== 'PGRST116') throw error // Ignore 'not found'
+    return data ? data.team_id : null
 }

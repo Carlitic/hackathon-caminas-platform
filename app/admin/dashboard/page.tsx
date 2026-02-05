@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, CheckCircle, XCircle, Settings, Trophy } from "lucide-react"
+import { Users, CheckCircle, XCircle, Settings, Trophy, Plus, LifeBuoy } from "lucide-react"
 import { getCurrentUserProfile } from "@/lib/auth"
 import {
     getPendingTutors,
@@ -16,8 +16,10 @@ import {
     revokeTutorApproval,
     getEventConfig,
     updateEventPhase,
-    getAllTeamsWithStats
+    getAllTeamsWithStats,
+    createTeamAsAdmin
 } from "@/lib/admin"
+import { getSupportTickets, resolveSupportTicket } from "@/lib/wildcards"
 import { toast } from "sonner"
 import {
     AlertDialog,
@@ -29,6 +31,23 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 export default function AdminDashboard() {
     const router = useRouter()
@@ -37,6 +56,7 @@ export default function AdminDashboard() {
     const [approvedTutors, setApprovedTutors] = useState<any[]>([])
     const [eventConfig, setEventConfig] = useState<any>(null)
     const [teams, setTeams] = useState<any[]>([])
+    const [supportTickets, setSupportTickets] = useState<any[]>([])
 
     // Dialog States
     const [actionToConfirm, setActionToConfirm] = useState<{
@@ -46,16 +66,17 @@ export default function AdminDashboard() {
         description: string
     } | null>(null)
 
+    const [createTeamDialog, setCreateTeamDialog] = useState(false)
+    const [selectedYear, setSelectedYear] = useState<string>('1')
+
     useEffect(() => {
         checkAuth()
         loadData()
     }, [])
 
     async function checkAuth() {
-        // alert("DEBUG: Admin checkAuth executing...")
         const profile = await getCurrentUserProfile()
         if (!profile || profile.role !== 'admin') {
-            // alert("DEBUG: Admin check failed. Profile: " + JSON.stringify(profile))
             router.push('/login')
         }
     }
@@ -67,11 +88,13 @@ export default function AdminDashboard() {
             const approved = await getApprovedTutors()
             const config = await getEventConfig()
             const allTeams = await getAllTeamsWithStats()
+            const tickets = await getSupportTickets()
 
             setPendingTutors(pending)
             setApprovedTutors(approved)
             setEventConfig(config)
             setTeams(allTeams)
+            setSupportTickets(tickets)
         } catch (error) {
             console.error('Error loading admin data:', error)
             toast.error('Error al cargar datos')
@@ -83,98 +106,73 @@ export default function AdminDashboard() {
     async function handleApproveTutor(tutorId: string) {
         try {
             await approveTutor(tutorId)
-            alert('Tutor aprobado exitosamente')
+            toast.success('Tutor aprobado')
             loadData()
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`)
+            toast.error(error.message)
         }
     }
 
-    function confirmDenyTutor(tutorId: string) {
-        setActionToConfirm({
-            type: 'deny',
-            data: tutorId,
-            title: '¿Denegar solicitud?',
-            description: '¿Estás seguro de denegar esta solicitud de tutor? Esta acción no se puede deshacer.'
-        })
-    }
-
-    function confirmRevokeTutor(tutorId: string) {
-        setActionToConfirm({
-            type: 'revoke',
-            data: tutorId,
-            title: '¿Revocar aprobación?',
-            description: '¿Estás seguro de revocar la aprobación de este tutor? Dejará de tener acceso al dashboard de profesor.'
-        })
-    }
-
-    function confirmPhaseChange(phase: string) {
-        setActionToConfirm({
-            type: 'phase',
-            data: phase,
-            title: '¿Cambiar fase del evento?',
-            description: `¿Estás seguro de cambiar la fase del evento a "${phase}"? Esto afectará a lo que pueden hacer los usuarios.`
-        })
-    }
-
-    async function executeConfirmedAction() {
-        if (!actionToConfirm) return
-
+    async function handleDenyTutor(tutorId: string) {
         try {
-            if (actionToConfirm.type === 'deny') {
-                await denyTutor(actionToConfirm.data)
-                toast.success('Solicitud denegada')
-            } else if (actionToConfirm.type === 'revoke') {
-                await revokeTutorApproval(actionToConfirm.data)
-                toast.success('Aprobación revocada')
-            } else if (actionToConfirm.type === 'phase') {
-                await updateEventPhase(actionToConfirm.data)
-                toast.success(`Fase actualizada a ${actionToConfirm.data}`)
-            }
+            await denyTutor(tutorId)
+            toast.success('Solicitud denegada')
             loadData()
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`)
-        } finally {
-            setActionToConfirm(null)
+            toast.error(error.message)
         }
     }
 
-    if (loading) {
-        return (
-            <div className="flex min-h-screen items-center justify-center">
-                <p>Cargando...</p>
-            </div>
-        )
+    async function handleRevokeTutor(tutorId: string) {
+        try {
+            await revokeTutorApproval(tutorId)
+            toast.success('Aprobación revocada')
+            loadData()
+        } catch (error: any) {
+            toast.error(error.message)
+        }
     }
+
+    async function handlePhaseChange(newPhase: string) {
+        try {
+            await updateEventPhase(newPhase)
+            toast.success(`Fase cambiada a: ${newPhase}`)
+            loadData()
+        } catch (error: any) {
+            toast.error(error.message)
+        }
+    }
+
+    async function handleCreateTeam() {
+        try {
+            await createTeamAsAdmin(selectedYear)
+            toast.success('Equipo creado exitosamente')
+            setCreateTeamDialog(false)
+            loadData()
+        } catch (error: any) {
+            toast.error(error.message || 'Error al crear equipo')
+        }
+    }
+
+    if (loading) return <div className="flex h-screen items-center justify-center">Cargando...</div>
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
-            <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => !open && setActionToConfirm(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{actionToConfirm?.title}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {actionToConfirm?.description}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={executeConfirmedAction}>Continuar</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-
-            <div className="max-w-7xl mx-auto space-y-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold">Panel de Administración</h1>
-                        <p className="text-muted-foreground">Gestión de tutores y evento</p>
-                    </div>
-                    <Button variant="outline" onClick={() => router.push('/')}>
-                        Volver al Inicio
-                    </Button>
+        <div className="container mx-auto p-6 space-y-8">
+            <header className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Panel de Administración</h1>
+                    <p className="text-muted-foreground">Gestiona tutores, equipos y el evento</p>
                 </div>
+                <Button variant="outline" onClick={async () => {
+                    const { supabase } = await import("@/lib/supabase");
+                    await supabase.auth.signOut();
+                    router.push('/login')
+                }}>
+                    Cerrar Sesión
+                </Button>
+            </header>
 
+            <div className="space-y-6">
                 <Tabs defaultValue="tutors" className="space-y-4">
                     <TabsList>
                         <TabsTrigger value="tutors">
@@ -188,6 +186,10 @@ export default function AdminDashboard() {
                         <TabsTrigger value="teams">
                             <Trophy className="h-4 w-4 mr-2" />
                             Equipos
+                        </TabsTrigger>
+                        <TabsTrigger value="support">
+                            <LifeBuoy className="h-4 w-4 mr-2" />
+                            Soporte ({supportTickets.filter(t => !t.resolved).length})
                         </TabsTrigger>
                     </TabsList>
 
@@ -207,33 +209,30 @@ export default function AdminDashboard() {
                                         No hay solicitudes pendientes
                                     </p>
                                 ) : (
-                                    <div className="space-y-4">
+                                    <div className="space-y-3">
                                         {pendingTutors.map((tutor) => (
                                             <div key={tutor.id} className="flex items-center justify-between p-4 border rounded-lg">
                                                 <div>
-                                                    <p className="font-semibold">{tutor.full_name}</p>
+                                                    <p className="font-medium">{tutor.full_name}</p>
                                                     <p className="text-sm text-muted-foreground">{tutor.email}</p>
-                                                    <Badge className="mt-2">{tutor.tutor_group}</Badge>
-                                                    <p className="text-xs text-muted-foreground mt-1">
-                                                        Asignaturas: {tutor.subjects?.join(', ')}
-                                                    </p>
+                                                    <Badge className="mt-1">{tutor.tutor_group}</Badge>
                                                 </div>
-                                                <div className="flex flex-wrap gap-2 justify-end">
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => handleApproveTutor(tutor.id)}
-                                                        className="gap-2"
-                                                    >
-                                                        <CheckCircle className="h-4 w-4" />
+                                                <div className="flex gap-2">
+                                                    <Button size="sm" onClick={() => handleApproveTutor(tutor.id)}>
+                                                        <CheckCircle className="h-4 w-4 mr-2" />
                                                         Aprobar
                                                     </Button>
                                                     <Button
                                                         size="sm"
                                                         variant="destructive"
-                                                        onClick={() => confirmDenyTutor(tutor.id)}
-                                                        className="gap-2"
+                                                        onClick={() => setActionToConfirm({
+                                                            type: 'deny',
+                                                            data: tutor.id,
+                                                            title: '¿Denegar solicitud?',
+                                                            description: `¿Estás seguro de denegar la solicitud de ${tutor.full_name}?`
+                                                        })}
                                                     >
-                                                        <XCircle className="h-4 w-4" />
+                                                        <XCircle className="h-4 w-4 mr-2" />
                                                         Denegar
                                                     </Button>
                                                 </div>
@@ -249,7 +248,7 @@ export default function AdminDashboard() {
                             <CardHeader>
                                 <CardTitle>Tutores Aprobados ({approvedTutors.length})</CardTitle>
                                 <CardDescription>
-                                    Tutores activos que pueden gestionar alumnos
+                                    Tutores activos en el sistema
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -258,23 +257,26 @@ export default function AdminDashboard() {
                                         No hay tutores aprobados
                                     </p>
                                 ) : (
-                                    <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="space-y-3">
                                         {approvedTutors.map((tutor) => (
-                                            <div key={tutor.id} className="p-4 border rounded-lg">
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <p className="font-semibold">{tutor.full_name}</p>
-                                                        <p className="text-sm text-muted-foreground">{tutor.email}</p>
-                                                        <Badge className="mt-2" variant="default">{tutor.tutor_group}</Badge>
-                                                    </div>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() => confirmRevokeTutor(tutor.id)}
-                                                    >
-                                                        Revocar
-                                                    </Button>
+                                            <div key={tutor.id} className="flex items-center justify-between p-4 border rounded-lg">
+                                                <div>
+                                                    <p className="font-medium">{tutor.full_name}</p>
+                                                    <p className="text-sm text-muted-foreground">{tutor.email}</p>
+                                                    <Badge className="mt-1">{tutor.tutor_group}</Badge>
                                                 </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => setActionToConfirm({
+                                                        type: 'revoke',
+                                                        data: tutor.id,
+                                                        title: '¿Revocar aprobación?',
+                                                        description: `¿Estás seguro de revocar la aprobación de ${tutor.full_name}?`
+                                                    })}
+                                                >
+                                                    Revocar
+                                                </Button>
                                             </div>
                                         ))}
                                     </div>
@@ -284,172 +286,211 @@ export default function AdminDashboard() {
                     </TabsContent>
 
                     {/* Event Tab */}
-                    <TabsContent value="event">
+                    <TabsContent value="event" className="space-y-4">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Gestión del Evento</CardTitle>
+                                <CardTitle>Control de Fases del Evento</CardTitle>
                                 <CardDescription>
-                                    Controla las fases de la Hackathon
+                                    Gestiona la fase actual de la Hackathon
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div>
-                                    <p className="text-sm font-medium mb-2">Fase Actual:</p>
-                                    <Badge variant="default" className="text-lg px-4 py-2">
-                                        {eventConfig?.phase || 'inicio'}
-                                    </Badge>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-4 mt-6">
-                                    <Button
-                                        onClick={() => confirmPhaseChange('inicio')}
-                                        variant={eventConfig?.phase === 'inicio' ? 'default' : 'outline'}
-                                    >
-                                        Inicio
-                                    </Button>
-                                    <Button
-                                        onClick={() => confirmPhaseChange('desarrollo')}
-                                        variant={eventConfig?.phase === 'desarrollo' ? 'default' : 'outline'}
-                                    >
-                                        Desarrollo
-                                    </Button>
-                                    <Button
-                                        onClick={() => confirmPhaseChange('votacion')}
-                                        variant={eventConfig?.phase === 'votacion' ? 'default' : 'outline'}
-                                    >
-                                        Votación
-                                    </Button>
-                                    <Button
-                                        onClick={() => confirmPhaseChange('finalizado')}
-                                        variant={eventConfig?.phase === 'finalizado' ? 'default' : 'outline'}
-                                    >
-                                        Finalizado
-                                    </Button>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className="text-sm font-medium mb-2">Fase Actual:</p>
+                                        <Badge className="text-lg py-2 px-4">
+                                            {eventConfig?.phase?.toUpperCase() || 'INICIO'}
+                                        </Badge>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {['inicio', 'desarrollo', 'votacion', 'finalizado'].map((phase) => (
+                                            <Button
+                                                key={phase}
+                                                variant={eventConfig?.phase === phase ? 'default' : 'outline'}
+                                                onClick={() => setActionToConfirm({
+                                                    type: 'phase',
+                                                    data: phase,
+                                                    title: `¿Cambiar a fase ${phase}?`,
+                                                    description: 'Esta acción afectará a todos los usuarios del sistema.'
+                                                })}
+                                            >
+                                                {phase.charAt(0).toUpperCase() + phase.slice(1)}
+                                            </Button>
+                                        ))}
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
                     </TabsContent>
 
                     {/* Teams Tab */}
-                    <TabsContent value="teams" className="space-y-8">
-                        {/* JUNIORS SECTION (1º) */}
-                        <div className="space-y-4">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
-                                <Badge variant="secondary" className="text-base px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">Juniors</Badge>
-                                Equipos de 1º Curso
-                            </h2>
-                            <div className="grid gap-4">
-                                {teams.filter(t => t.year === 1).length === 0 ? (
-                                    <p className="text-muted-foreground italic">No hay equipos Junior registrados.</p>
+                    <TabsContent value="teams" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle>Equipos ({teams.length})</CardTitle>
+                                        <CardDescription>
+                                            Vista general de todos los equipos
+                                        </CardDescription>
+                                    </div>
+                                    <Button onClick={() => setCreateTeamDialog(true)}>
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Crear Equipo
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                {teams.length === 0 ? (
+                                    <p className="text-muted-foreground text-center py-8">
+                                        No hay equipos creados
+                                    </p>
                                 ) : (
-                                    teams.filter(t => t.year === 1).map((team) => (
-                                        <Card key={team.id}>
-                                            <CardContent className="p-6">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <h3 className="font-semibold text-lg">{team.name}</h3>
-                                                    <div className="flex gap-2">
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        {teams.map((team) => (
+                                            <Card key={team.id}>
+                                                <CardHeader>
+                                                    <div className="flex items-center justify-between">
+                                                        <CardTitle className="text-lg">{team.name}</CardTitle>
                                                         <Badge variant={team.status === 'READY' ? 'default' : 'secondary'}>
-                                                            {team.status === 'READY' ? 'LISTO' : 'PENDIENTE'}
+                                                            {team.status}
                                                         </Badge>
-                                                        <Badge variant="outline">{team.votes} votos</Badge>
                                                     </div>
-                                                </div>
-
-                                                {team.members && team.members.length > 0 ? (
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                                                        {team.members.map((member: any) => (
-                                                            <div key={member.id} className="text-sm bg-slate-100 dark:bg-slate-900 p-2 rounded flex items-center gap-2">
-                                                                <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                                                                    {member.full_name.charAt(0)}
-                                                                </div>
-                                                                <div className="overflow-hidden">
-                                                                    <p className="font-medium truncate">{member.full_name}</p>
-                                                                    <p className="text-xs text-muted-foreground">{member.cycle}</p>
-                                                                </div>
-                                                                {member.is_leader && (
-                                                                    <Badge variant="secondary" className="text-[10px] h-4 ml-auto">Líder</Badge>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-sm text-muted-foreground italic">
-                                                        Miembros: 0/6 (Sin alumnos asignados)
+                                                    <CardDescription>
+                                                        Año {team.year_level} • {team.members_count || 0}/6 miembros
+                                                    </CardDescription>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    {team.github_url && (
+                                                        <p className="text-xs text-muted-foreground truncate">
+                                                            GitHub: {team.github_url}
+                                                        </p>
+                                                    )}
+                                                    <p className="text-sm mt-2">
+                                                        Votos: {team.votes || 0}
                                                     </p>
-                                                )}
-
-                                                {team.github_url && (
-                                                    <p className="text-xs text-muted-foreground mt-4 pt-2 border-t">
-                                                        GitHub: {team.github_url}
-                                                    </p>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-                                    ))
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
                                 )}
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
 
-                        {/* SENIORS SECTION (2º) */}
-                        <div className="space-y-4 pt-4 border-t">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
-                                <Badge variant="secondary" className="text-base px-3 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">Seniors</Badge>
-                                Equipos de 2º Curso
-                            </h2>
-                            <div className="grid gap-4">
-                                {teams.filter(t => t.year === 2).length === 0 ? (
-                                    <p className="text-muted-foreground italic">No hay equipos Senior registrados.</p>
-                                ) : (
-                                    teams.filter(t => t.year === 2).map((team) => (
-                                        <Card key={team.id}>
-                                            <CardContent className="p-6">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <h3 className="font-semibold text-lg">{team.name}</h3>
-                                                    <div className="flex gap-2">
-                                                        <Badge variant={team.status === 'READY' ? 'default' : 'secondary'}>
-                                                            {team.status === 'READY' ? 'LISTO' : 'PENDIENTE'}
-                                                        </Badge>
-                                                        <Badge variant="outline">{team.votes} votos</Badge>
+                    {/* Support Tickets Tab */}
+                    <TabsContent value="support" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Tickets de Soporte</CardTitle>
+                                <CardDescription>
+                                    Solicitudes de ayuda de los equipos (5 comodines por equipo/día)
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    {supportTickets.filter(t => !t.resolved).length === 0 ? (
+                                        <p className="text-center text-muted-foreground py-8">
+                                            No hay tickets pendientes
+                                        </p>
+                                    ) : (
+                                        supportTickets.filter(t => !t.resolved).map(ticket => (
+                                            <div key={ticket.id} className="border rounded-lg p-4">
+                                                <div className="flex justify-between items-start gap-4">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Badge>{ticket.team?.name || 'Equipo'}</Badge>
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {ticket.creator?.full_name || 'Estudiante'}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-sm mb-2">{ticket.message}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {new Date(ticket.created_at).toLocaleString('es-ES')}
+                                                        </p>
                                                     </div>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={async () => {
+                                                            try {
+                                                                await resolveSupportTicket(ticket.id)
+                                                                await loadData()
+                                                                toast.success("Ticket resuelto")
+                                                            } catch (error) {
+                                                                toast.error("Error al resolver ticket")
+                                                            }
+                                                        }}
+                                                    >
+                                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                                        Resolver
+                                                    </Button>
                                                 </div>
-
-                                                {team.members && team.members.length > 0 ? (
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                                                        {team.members.map((member: any) => (
-                                                            <div key={member.id} className="text-sm bg-slate-100 dark:bg-slate-900 p-2 rounded flex items-center gap-2">
-                                                                <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                                                                    {member.full_name.charAt(0)}
-                                                                </div>
-                                                                <div className="overflow-hidden">
-                                                                    <p className="font-medium truncate">{member.full_name}</p>
-                                                                    <p className="text-xs text-muted-foreground">{member.cycle}</p>
-                                                                </div>
-                                                                {member.is_leader && (
-                                                                    <Badge variant="secondary" className="text-[10px] h-4 ml-auto">Líder</Badge>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-sm text-muted-foreground italic">
-                                                        Miembros: 0/6 (Sin alumnos asignados)
-                                                    </p>
-                                                )}
-
-                                                {team.github_url && (
-                                                    <p className="text-xs text-muted-foreground mt-4 pt-2 border-t">
-                                                        GitHub: {team.github_url}
-                                                    </p>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-                                    ))
-                                )}
-                            </div>
-                        </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
                     </TabsContent>
                 </Tabs>
             </div>
-        </div>
+
+            {/* Confirmation Dialog */}
+            <AlertDialog open={!!actionToConfirm} onOpenChange={() => setActionToConfirm(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{actionToConfirm?.title}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {actionToConfirm?.description}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => {
+                            if (actionToConfirm?.type === 'deny') handleDenyTutor(actionToConfirm.data)
+                            if (actionToConfirm?.type === 'revoke') handleRevokeTutor(actionToConfirm.data)
+                            if (actionToConfirm?.type === 'phase') handlePhaseChange(actionToConfirm.data)
+                            setActionToConfirm(null)
+                        }}>
+                            Confirmar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Create Team Dialog */}
+            <Dialog open={createTeamDialog} onOpenChange={setCreateTeamDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Crear Nuevo Equipo</DialogTitle>
+                        <DialogDescription>
+                            Selecciona el año para el nuevo equipo
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="year">Año del Equipo</Label>
+                            <Select value={selectedYear} onValueChange={setSelectedYear}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecciona un año" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="1">1º Año</SelectItem>
+                                    <SelectItem value="2">2º Año</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setCreateTeamDialog(false)}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleCreateTeam}>
+                            Crear Equipo
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div >
     )
 }

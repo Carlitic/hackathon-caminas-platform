@@ -1,18 +1,52 @@
+'use client'
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Trophy, Medal, Award, Users } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabase"
 
 export default function RankingPage() {
-    // Mock teams sorted by votes (descending)
-    const rankedTeams = [
-        { id: 3, name: "Equipo 3", votes: 12, members: 6, certificate: "gold" },
-        { id: 1, name: "Equipo 1", votes: 8, members: 6, certificate: "silver" },
-        { id: 4, name: "Equipo 4", votes: 5, members: 6, certificate: "bronze" },
-        { id: 2, name: "Equipo 2", votes: 2, members: 6, certificate: "participant" },
-        { id: 5, name: "Equipo 5", votes: 1, members: 6, certificate: "participant" },
-    ]
+    const [rankedTeams, setRankedTeams] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        loadRanking()
+    }, [])
+
+    async function loadRanking() {
+        try {
+            const { data, error } = await supabase
+                .from('teams')
+                .select(`
+                    *,
+                    members:profiles(id),
+                    votes:votes(id)
+                `)
+                .order('team_number')
+
+            if (error) throw error
+
+            // Calculate vote counts and sort
+            const teamsWithVotes = (data || []).map(team => ({
+                id: team.id,
+                name: team.name,
+                votes: team.votes?.length || 0,
+                members: team.members?.length || 0
+            }))
+
+            // Sort by votes descending
+            teamsWithVotes.sort((a, b) => b.votes - a.votes)
+
+            setRankedTeams(teamsWithVotes)
+        } catch (error) {
+            console.error('Error loading ranking:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const getCertificateInfo = (position: number) => {
         switch (position) {
@@ -47,6 +81,14 @@ export default function RankingPage() {
         }
     }
 
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <p>Cargando ranking...</p>
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 py-12 px-4">
             <div className="container mx-auto max-w-4xl space-y-8">
@@ -67,115 +109,127 @@ export default function RankingPage() {
                     </Link>
                 </div>
 
-                {/* Podium - Top 3 */}
-                <div className="grid md:grid-cols-3 gap-6 mb-8">
-                    {/* 2nd Place */}
-                    {rankedTeams[1] && (
-                        <div className="md:order-1 flex flex-col items-center">
-                            <div className="w-full">
-                                <Card className="border-4 border-slate-400 shadow-xl">
-                                    <CardHeader className="text-center pb-2">
-                                        <div className="flex justify-center mb-2">
-                                            {getCertificateInfo(2).icon}
-                                        </div>
-                                        <CardTitle className="text-2xl">2º Puesto</CardTitle>
-                                        <Badge className="bg-slate-400 text-white mt-2">
-                                            {getCertificateInfo(2).badge}
-                                        </Badge>
-                                    </CardHeader>
-                                    <CardContent className="text-center">
-                                        <p className="text-xl font-bold mb-2">{rankedTeams[1].name}</p>
-                                        <p className="text-3xl font-bold text-slate-600">{rankedTeams[1].votes}</p>
-                                        <p className="text-sm text-muted-foreground">votos</p>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 1st Place */}
-                    {rankedTeams[0] && (
-                        <div className="md:order-2 flex flex-col items-center md:-mt-8">
-                            <div className="w-full">
-                                <Card className="border-4 border-yellow-500 shadow-2xl">
-                                    <CardHeader className="text-center pb-2">
-                                        <div className="flex justify-center mb-2">
-                                            {getCertificateInfo(1).icon}
-                                        </div>
-                                        <CardTitle className="text-3xl">🏆 1º Puesto</CardTitle>
-                                        <Badge className="bg-yellow-500 text-white mt-2">
-                                            {getCertificateInfo(1).badge}
-                                        </Badge>
-                                    </CardHeader>
-                                    <CardContent className="text-center">
-                                        <p className="text-2xl font-bold mb-2">{rankedTeams[0].name}</p>
-                                        <p className="text-4xl font-bold text-yellow-600">{rankedTeams[0].votes}</p>
-                                        <p className="text-sm text-muted-foreground">votos</p>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 3rd Place */}
-                    {rankedTeams[2] && (
-                        <div className="md:order-3 flex flex-col items-center">
-                            <div className="w-full">
-                                <Card className="border-4 border-orange-500 shadow-xl">
-                                    <CardHeader className="text-center pb-2">
-                                        <div className="flex justify-center mb-2">
-                                            {getCertificateInfo(3).icon}
-                                        </div>
-                                        <CardTitle className="text-2xl">3º Puesto</CardTitle>
-                                        <Badge className="bg-orange-500 text-white mt-2">
-                                            {getCertificateInfo(3).badge}
-                                        </Badge>
-                                    </CardHeader>
-                                    <CardContent className="text-center">
-                                        <p className="text-xl font-bold mb-2">{rankedTeams[2].name}</p>
-                                        <p className="text-3xl font-bold text-orange-600">{rankedTeams[2].votes}</p>
-                                        <p className="text-sm text-muted-foreground">votos</p>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Rest of teams */}
-                {rankedTeams.length > 3 && (
+                {rankedTeams.length === 0 ? (
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Otros Participantes</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {rankedTeams.slice(3).map((team, index) => {
-                                    const position = index + 4
-                                    const info = getCertificateInfo(position)
-                                    return (
-                                        <div key={team.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900">
-                                            <div className="flex items-center gap-4">
-                                                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 font-bold text-lg">
-                                                    {position}
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-lg">{team.name}</p>
-                                                    <Badge variant="outline" className="mt-1">
-                                                        {info.badge}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-2xl font-bold {info.textColor}">{team.votes}</p>
-                                                <p className="text-xs text-muted-foreground">votos</p>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
+                        <CardContent className="p-12 text-center">
+                            <p className="text-muted-foreground">
+                                Aún no hay equipos registrados en la Hackathon
+                            </p>
                         </CardContent>
                     </Card>
+                ) : (
+                    <>
+                        {/* Podium - Top 3 */}
+                        <div className="grid md:grid-cols-3 gap-6 mb-8">
+                            {/* 2nd Place */}
+                            {rankedTeams[1] && (
+                                <div className="md:order-1 flex flex-col items-center">
+                                    <div className="w-full">
+                                        <Card className="border-4 border-slate-400 shadow-xl">
+                                            <CardHeader className="text-center pb-2">
+                                                <div className="flex justify-center mb-2">
+                                                    {getCertificateInfo(2).icon}
+                                                </div>
+                                                <CardTitle className="text-2xl">2º Puesto</CardTitle>
+                                                <Badge className="bg-slate-400 text-white mt-2">
+                                                    {getCertificateInfo(2).badge}
+                                                </Badge>
+                                            </CardHeader>
+                                            <CardContent className="text-center">
+                                                <p className="text-xl font-bold mb-2">{rankedTeams[1].name}</p>
+                                                <p className="text-3xl font-bold text-slate-600">{rankedTeams[1].votes}</p>
+                                                <p className="text-sm text-muted-foreground">votos</p>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 1st Place */}
+                            {rankedTeams[0] && (
+                                <div className="md:order-2 flex flex-col items-center md:-mt-8">
+                                    <div className="w-full">
+                                        <Card className="border-4 border-yellow-500 shadow-2xl">
+                                            <CardHeader className="text-center pb-2">
+                                                <div className="flex justify-center mb-2">
+                                                    {getCertificateInfo(1).icon}
+                                                </div>
+                                                <CardTitle className="text-3xl">🏆 1º Puesto</CardTitle>
+                                                <Badge className="bg-yellow-500 text-white mt-2">
+                                                    {getCertificateInfo(1).badge}
+                                                </Badge>
+                                            </CardHeader>
+                                            <CardContent className="text-center">
+                                                <p className="text-2xl font-bold mb-2">{rankedTeams[0].name}</p>
+                                                <p className="text-4xl font-bold text-yellow-600">{rankedTeams[0].votes}</p>
+                                                <p className="text-sm text-muted-foreground">votos</p>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 3rd Place */}
+                            {rankedTeams[2] && (
+                                <div className="md:order-3 flex flex-col items-center">
+                                    <div className="w-full">
+                                        <Card className="border-4 border-orange-500 shadow-xl">
+                                            <CardHeader className="text-center pb-2">
+                                                <div className="flex justify-center mb-2">
+                                                    {getCertificateInfo(3).icon}
+                                                </div>
+                                                <CardTitle className="text-2xl">3º Puesto</CardTitle>
+                                                <Badge className="bg-orange-500 text-white mt-2">
+                                                    {getCertificateInfo(3).badge}
+                                                </Badge>
+                                            </CardHeader>
+                                            <CardContent className="text-center">
+                                                <p className="text-xl font-bold mb-2">{rankedTeams[2].name}</p>
+                                                <p className="text-3xl font-bold text-orange-600">{rankedTeams[2].votes}</p>
+                                                <p className="text-sm text-muted-foreground">votos</p>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Rest of teams */}
+                        {rankedTeams.length > 3 && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Otros Participantes</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-3">
+                                        {rankedTeams.slice(3).map((team, index) => {
+                                            const position = index + 4
+                                            const info = getCertificateInfo(position)
+                                            return (
+                                                <div key={team.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 font-bold text-lg">
+                                                            {position}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-semibold text-lg">{team.name}</p>
+                                                            <Badge variant="outline" className="mt-1">
+                                                                {info.badge}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className={`text-2xl font-bold ${info.textColor}`}>{team.votes}</p>
+                                                        <p className="text-xs text-muted-foreground">votos</p>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </>
                 )}
             </div>
         </div>

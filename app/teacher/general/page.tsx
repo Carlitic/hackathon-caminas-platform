@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserPlus, Trophy } from "lucide-react"
-import { getCurrentUserProfile } from "@/lib/auth"
+import { getCurrentUserProfile, logout } from "@/lib/auth"
 import { toast } from "sonner"
 import {
     AlertDialog,
@@ -29,6 +29,8 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { getRequirements, createRequirement, updateRequirement, deleteRequirement, castVote, getMyVote, getTeams } from "@/lib/teacher"
+import { Edit, Trash2 } from "lucide-react"
 
 export default function GeneralTeacherDashboard() {
     const router = useRouter()
@@ -42,7 +44,15 @@ export default function GeneralTeacherDashboard() {
 
     const [requirements, setRequirements] = useState<any[]>([])
     const [reqDialog, setReqDialog] = useState(false)
-    const [reqForm, setReqForm] = useState({ title: "", description: "" })
+    const [editingReq, setEditingReq] = useState<any>(null)
+    const [reqForm, setReqForm] = useState({
+        title: "",
+        description: "",
+        target_cycles: [] as string[],
+        for_all_students: true,
+        target_students: [] as string[]
+    })
+    const [teams, setTeams] = useState<any[]>([])
 
     // Voting State
     const [myVote, setMyVote] = useState<number | null>(null)
@@ -50,6 +60,13 @@ export default function GeneralTeacherDashboard() {
 
     useEffect(() => {
         checkAuth()
+        async function loadTeams() {
+            try {
+                const t = await getTeams(undefined) // Get all teams
+                setTeams(t)
+            } catch (e) { }
+        }
+        loadTeams()
     }, [])
 
     async function checkAuth() {
@@ -65,27 +82,76 @@ export default function GeneralTeacherDashboard() {
         }
 
         setProfile(userProfile)
-        // TODO: Load real requirements and votes when API is ready
-        setRequirements([])
+        try {
+            const reqs = await getRequirements(userProfile.id)
+            setRequirements(reqs || [])
+            const savedVote = await getMyVote()
+            setMyVote(savedVote)
+        } catch (e) { console.error(e) }
     }
 
-    function handleCreateRequirement() {
+    async function handleSaveRequirement() {
         if (!reqForm.title || !reqForm.description) {
             toast.error("Rellena todos los campos")
             return
         }
 
-        const newReq = {
-            id: Date.now(),
-            title: reqForm.title,
-            desc: reqForm.description,
-            tag: profile.subjects[0] || "General"
-        }
+        try {
+            const reqData = {
+                title: reqForm.title,
+                description: reqForm.description,
+                tag: profile.subjects[0] || "General",
+                target_cycles: reqForm.target_cycles,
+                target_students: reqForm.target_students,
+                for_all_students: reqForm.for_all_students
+            }
 
-        setRequirements([...requirements, newReq])
+            if (editingReq) {
+                await updateRequirement(editingReq.id, reqData)
+                toast.success("Requisito actualizado")
+            } else {
+                await createRequirement(reqData)
+                toast.success("Requisito creado correctamente")
+            }
+
+            const reqs = await getRequirements(profile.id)
+            setRequirements(reqs)
+            setReqDialog(false)
+            setEditingReq(null)
+            setReqForm({
+                title: "",
+                description: "",
+                target_cycles: [],
+                for_all_students: true,
+                target_students: []
+            })
+        } catch (error: any) {
+            toast.error("Error: " + error.message)
+        }
+    }
+
+    function handleEditRequirement(req: any) {
+        setEditingReq(req)
+        setReqForm({
+            title: req.title,
+            description: req.description,
+            target_cycles: req.target_cycles || [],
+            for_all_students: req.for_all_students ?? true,
+            target_students: req.target_students || []
+        })
+        setReqDialog(true)
+    }
+
+    function handleCloseReqDialog() {
         setReqDialog(false)
-        setReqForm({ title: "", description: "" })
-        toast.success("Requisito creado correctamente")
+        setEditingReq(null)
+        setReqForm({
+            title: "",
+            description: "",
+            target_cycles: [],
+            for_all_students: true,
+            target_students: []
+        })
     }
 
     async function executeConfirmedAction() {
@@ -93,7 +159,7 @@ export default function GeneralTeacherDashboard() {
 
         try {
             if (actionToConfirm.type === 'vote') {
-                // Mock vote submission
+                await castVote(actionToConfirm.data)
                 setMyVote(actionToConfirm.data)
                 toast.success(`Voto registrado para el Equipo ${actionToConfirm.data}`)
             }
@@ -136,7 +202,7 @@ export default function GeneralTeacherDashboard() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setReqDialog(false)}>Cancelar</Button>
-                        <Button onClick={handleCreateRequirement}>Crear Requisito</Button>
+                        <Button onClick={handleSaveRequirement}>Crear Requisito</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -164,8 +230,8 @@ export default function GeneralTeacherDashboard() {
                             {profile.full_name} - {profile.subjects?.join(', ')}
                         </p>
                     </div>
-                    <Button variant="outline" onClick={() => router.push('/')}>
-                        Volver al Inicio
+                    <Button variant="outline" onClick={async () => { await logout(); window.location.href = "/login" }}>
+                        Cerrar Sesión
                     </Button>
                 </div>
 
@@ -226,7 +292,8 @@ export default function GeneralTeacherDashboard() {
                             </CardHeader>
                             <CardContent>
                                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                    {[1, 2, 3, 4, 5].map((teamNum) => {
+                                    {teams.map((team) => {
+                                        const teamNum = team.id
                                         const isMyVote = myVote === teamNum
                                         return (
                                             <Card key={teamNum} className={`transition-all ${isMyVote ? 'ring-2 ring-primary bg-primary/5' : ''}`}>

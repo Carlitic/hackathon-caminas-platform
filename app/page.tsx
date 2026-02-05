@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Trophy, ArrowRight } from "lucide-react";
+import { Calendar, Users, Trophy, ArrowRight, FileText } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Home() {
@@ -48,6 +48,12 @@ export default function Home() {
                 <Button size="lg" variant="outline" className="font-semibold w-full sm:w-auto gap-2 shadow-sm">
                   <Trophy className="h-4 w-4" />
                   Ver Ranking
+                </Button>
+              </Link>
+              <Link href="/normas">
+                <Button size="lg" variant="outline" className="font-semibold w-full sm:w-auto gap-2 shadow-sm">
+                  <FileText className="h-4 w-4" />
+                  Normas
                 </Button>
               </Link>
             </div>

@@ -47,7 +47,6 @@ import {
     castVote,
     getMyVote
 } from "@/lib/teacher"
-import { getTeamCompositionSummary, validateTeamComposition } from "@/lib/wildcards"
 import { toast } from "sonner"
 import {
     AlertDialog,
@@ -67,7 +66,6 @@ export default function TeacherDashboard() {
     const [pendingStudents, setPendingStudents] = useState<any[]>([])
     const [myStudents, setMyStudents] = useState<any[]>([])
     const [teams, setTeams] = useState<any[]>([])
-    const [teamCompositions, setTeamCompositions] = useState<Record<string, any>>({})
     const [availableStudents, setAvailableStudents] = useState<any[]>([])
 
     // Voting State
@@ -195,18 +193,6 @@ export default function TeacherDashboard() {
             setMyStudents(myStudentsData)
             setTeams(teamsData)
             setAvailableStudents(availableData)
-
-            // Load team compositions
-            const compositions: Record<string, any> = {}
-            for (const team of teamsData) {
-                try {
-                    const composition = await getTeamCompositionSummary(team.id)
-                    compositions[team.id] = composition
-                } catch (error) {
-                    console.error(`Error loading composition for team ${team.id}:`, error)
-                }
-            }
-            setTeamCompositions(compositions)
 
             const reqs = await getRequirements(userProfile.id)
             setRequirements(reqs)
@@ -752,22 +738,6 @@ export default function TeacherDashboard() {
                                                             {team.status === 'READY' ? 'LISTO' : 'PENDIENTE'}
                                                         </Badge>
                                                     </div>
-                                                    {teamCompositions[team.id] && (
-                                                        <div className="flex gap-2 mb-2">
-                                                            <Badge variant={teamCompositions[team.id].daw === 2 ? "default" : "destructive"}>
-                                                                DAW: {teamCompositions[team.id].daw}/2
-                                                            </Badge>
-                                                            <Badge variant={teamCompositions[team.id].dam === 2 ? "default" : "destructive"}>
-                                                                DAM: {teamCompositions[team.id].dam}/2
-                                                            </Badge>
-                                                            <Badge variant={teamCompositions[team.id].asir === 2 ? "default" : "destructive"}>
-                                                                ASIR: {teamCompositions[team.id].asir}/2
-                                                            </Badge>
-                                                            <Badge variant="outline">
-                                                                Total: {teamCompositions[team.id].total}/6
-                                                            </Badge>
-                                                        </div>
-                                                    )}
                                                     <p className="text-sm text-muted-foreground mb-2">
                                                         Miembros: {team.members?.length || 0}/6
                                                     </p>
@@ -789,105 +759,6 @@ export default function TeacherDashboard() {
                         </div>
                     </TabsContent>
                 </Tabs>
-
-                {/* Requirements Tab */}
-                <TabsContent value="requirements" className="space-y-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>Requisitos de la Asignatura</CardTitle>
-                                <CardDescription>Define los criterios que los alumnos deben cumplir.</CardDescription>
-                            </div>
-                            <Button onClick={() => setReqDialog(true)}>
-                                <UserPlus className="mr-2 h-4 w-4" />
-                                Nuevo Requisito
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {requirements.length === 0 ? (
-                                    <p className="text-muted-foreground text-center py-8">No hay requisitos creados aún</p>
-                                ) : (
-                                    requirements.map((req) => (
-                                        <div key={req.id} className="flex items-start justify-between p-4 border rounded-lg">
-                                            <div className="flex-1">
-                                                <h4 className="font-semibold">{req.title}</h4>
-                                                <p className="text-sm text-muted-foreground mt-1">{req.description}</p>
-                                                <div className="flex gap-2 mt-2 flex-wrap">
-                                                    <Badge variant="outline">{req.tag}</Badge>
-                                                    {req.target_cycles && req.target_cycles.length > 0 && req.target_cycles.map((cycle: string) => (
-                                                        <Badge key={cycle} variant="secondary">{cycle}</Badge>
-                                                    ))}
-                                                    {req.for_all_students ? (
-                                                        <Badge variant="default" className="bg-blue-500">Todo el grupo</Badge>
-                                                    ) : (
-                                                        <Badge variant="default" className="bg-purple-500">{req.target_students?.length || 0} alumno(s)</Badge>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2 ml-4">
-                                                <Button size="sm" variant="ghost" onClick={() => handleEditRequirement(req)}>
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button size="sm" variant="ghost" onClick={async () => {
-                                                    if (confirm('¿Eliminar este requisito?')) {
-                                                        await deleteRequirement(req.id)
-                                                        const reqs = await getRequirements(profile.id)
-                                                        setRequirements(reqs)
-                                                        toast.success('Requisito eliminado')
-                                                    }
-                                                }}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                {/* Voting Tab */}
-                <TabsContent value="voting" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Evaluar Proyectos</CardTitle>
-                            <CardDescription>
-                                {votingOpen ? "Votación abierta. Puedes cambiar tu voto." : "Votación cerrada."}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                {teams.length === 0 ? (
-                                    <p className="text-muted-foreground col-span-3 text-center">No hay equipos para votar.</p>
-                                ) : (
-                                    teams.map((team) => {
-                                        const isMyVote = myVote === team.id
-                                        return (
-                                            <Card key={team.id} className={isMyVote ? 'ring-2 ring-primary' : ''}>
-                                                <CardHeader>
-                                                    <CardTitle className="text-lg">{team.name}</CardTitle>
-                                                    <CardDescription>{team.members?.length || 0}/6 miembros</CardDescription>
-                                                </CardHeader>
-                                                <CardContent>
-                                                    <Button className="w-full" variant={isMyVote ? "default" : "outline"} disabled={!votingOpen || isMyVote}
-                                                        onClick={() => setActionToConfirm({
-                                                            type: 'vote', data: team.id,
-                                                            title: myVote ? 'Cambiar Voto' : 'Confirmar Voto',
-                                                            description: myVote ? `Cambiar voto a ${team.name}?` : `Votar por ${team.name}?`
-                                                        })}>
-                                                        {isMyVote ? 'Votado' : (votingOpen ? 'Votar' : 'Cerrado')}
-                                                    </Button>
-                                                </CardContent>
-                                            </Card>
-                                        )
-                                    })
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
 
                 {/* Edit Dialog */}
                 <Dialog open={editDialog} onOpenChange={setEditDialog}>

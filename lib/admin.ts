@@ -186,3 +186,29 @@ export async function getAllTeamsWithStats() {
     if (error) throw error
     return data
 }
+
+// Create team as admin
+export async function createTeamAsAdmin(yearLevel: string) {
+    // Get next team number
+    const { data: teams } = await supabase
+        .from('teams')
+        .select('team_number')
+        .order('team_number', { ascending: false })
+        .limit(1)
+
+    const nextNumber = teams && teams.length > 0 ? teams[0].team_number + 1 : 1
+
+    const { data, error } = await supabase
+        .from('teams')
+        .insert({
+            name: `Equipo ${nextNumber}`,
+            team_number: nextNumber,
+            year: parseInt(yearLevel), // Use 'year' field as integer
+            status: 'PENDING'
+        })
+        .select()
+        .single()
+
+    if (error) throw error
+    return data
+}
