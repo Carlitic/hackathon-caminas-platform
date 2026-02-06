@@ -106,8 +106,8 @@ export default function AdminDashboard() {
     async function handleApproveTutor(tutorId: string) {
         try {
             await approveTutor(tutorId)
+            await loadData()
             toast.success('Tutor aprobado')
-            loadData()
         } catch (error: any) {
             toast.error(error.message)
         }
@@ -116,8 +116,8 @@ export default function AdminDashboard() {
     async function handleDenyTutor(tutorId: string) {
         try {
             await denyTutor(tutorId)
+            await loadData()
             toast.success('Solicitud denegada')
-            loadData()
         } catch (error: any) {
             toast.error(error.message)
         }
@@ -126,8 +126,8 @@ export default function AdminDashboard() {
     async function handleRevokeTutor(tutorId: string) {
         try {
             await revokeTutorApproval(tutorId)
+            await loadData()
             toast.success('Aprobación revocada')
-            loadData()
         } catch (error: any) {
             toast.error(error.message)
         }
@@ -136,8 +136,8 @@ export default function AdminDashboard() {
     async function handlePhaseChange(newPhase: string) {
         try {
             await updateEventPhase(newPhase)
+            await loadData()
             toast.success(`Fase cambiada a: ${newPhase}`)
-            loadData()
         } catch (error: any) {
             toast.error(error.message)
         }
