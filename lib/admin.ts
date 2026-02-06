@@ -111,13 +111,15 @@ export async function approveTutor(tutorId: string) {
 
     if (!tutor) throw new Error('Tutor not found')
 
-    const { data: existing } = await supabase
+    const { data: existing, error: checkError } = await supabase
         .from('profiles')
         .select('id')
         .eq('is_tutor', true)
         .eq('tutor_approved', true)
         .eq('tutor_group', tutor.tutor_group)
-        .single()
+        .maybeSingle()
+
+    if (checkError) throw checkError
 
     if (existing) {
         throw new Error(`Ya existe un tutor aprobado para el grupo ${tutor.tutor_group}`)
