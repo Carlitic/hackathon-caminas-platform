@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft } from "lucide-react"
 import { registerStudent, getTutors } from "@/lib/auth"
+import { toast } from "sonner"
 
 export default function RegisterPage() {
     const router = useRouter()
@@ -44,17 +45,17 @@ export default function RegisterPage() {
         const isConselleria = formData.email.endsWith('@alu.edu.gva.es')
 
         if (!isAdminEmail && !isConselleria) {
-            alert('Debes usar tu correo corporativo de alumno (@alu.edu.gva.es)')
+            toast.error('Debes usar tu correo corporativo de alumno (@alu.edu.gva.es)')
             return
         }
 
         if (formData.password !== formData.confirmPassword) {
-            alert('Las contraseñas no coinciden')
+            toast.error('Las contraseñas no coinciden')
             return
         }
 
         if (!formData.tutorId) {
-            alert('Debes seleccionar un tutor')
+            toast.error('Debes seleccionar un tutor')
             return
         }
 
@@ -71,10 +72,10 @@ export default function RegisterPage() {
         setLoading(false)
 
         if (result.success) {
-            alert('Registro exitoso! Tu tutor debe aprobar tu cuenta antes de que puedas iniciar sesión.')
+            toast.success('Registro exitoso! Tu tutor debe aprobar tu cuenta antes de que puedas iniciar sesión.')
             router.push('/login')
         } else {
-            alert(`Error: ${result.error}`)
+            toast.error(result.error)
         }
     }
 

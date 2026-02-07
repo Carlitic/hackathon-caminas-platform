@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft } from "lucide-react"
 import { login } from "@/lib/auth"
+import { toast } from "sonner"
 
 export default function LoginPage() {
     const router = useRouter()
@@ -35,7 +36,7 @@ export default function LoginPage() {
             window.location.href = '/dashboard';
         } else {
             console.error('Login error:', result.error)
-            alert(`Error: ${result.error || 'No se pudo cargar el perfil del usuario. Verifica tu conexión o contacta con soporte.'}`)
+            toast.error(result.error || 'No se pudo cargar el perfil del usuario. Verifica tu conexión o contacta con soporte.')
         }
     }
 

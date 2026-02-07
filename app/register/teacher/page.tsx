@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft } from "lucide-react"
 import { registerTeacher } from "@/lib/auth"
+import { toast } from "sonner"
 
 export default function RegisterTeacherPage() {
     const router = useRouter()
@@ -62,22 +63,22 @@ export default function RegisterTeacherPage() {
         const isConselleria = formData.email.endsWith('@edu.gva.es')
 
         if (!isAdminEmail && !isConselleria) {
-            alert('Debes usar tu correo corporativo de profesor (@edu.gva.es)')
+            toast.error('Debes usar tu correo corporativo de profesor (@edu.gva.es)')
             return
         }
 
         if (formData.password !== formData.confirmPassword) {
-            alert('Las contraseñas no coinciden')
+            toast.error('Las contraseñas no coinciden')
             return
         }
 
         if (formData.subjects.length === 0) {
-            alert('Debes seleccionar al menos una asignatura')
+            toast.error('Debes seleccionar al menos una asignatura')
             return
         }
 
         if (formData.isTutor && !formData.tutorGroup) {
-            alert('Si eres tutor, debes especificar tu grupo')
+            toast.error('Si eres tutor, debes especificar tu grupo')
             return
         }
 
@@ -96,13 +97,13 @@ export default function RegisterTeacherPage() {
 
         if (result.success) {
             if (formData.isTutor) {
-                alert('Registro exitoso! Un administrador debe aprobar tu solicitud de tutor antes de que puedas gestionar alumnos.')
+                toast.success('Registro exitoso! Un administrador debe aprobar tu solicitud de tutor antes de que puedas gestionar alumnos.')
             } else {
-                alert('Registro exitoso! Ya puedes iniciar sesión.')
+                toast.success('Registro exitoso! Ya puedes iniciar sesión.')
             }
             router.push('/login')
         } else {
-            alert(`Error: ${result.error}`)
+            toast.error(result.error)
         }
     }
 

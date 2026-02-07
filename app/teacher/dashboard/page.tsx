@@ -224,22 +224,20 @@ export default function TeacherDashboard() {
     async function handleApprove(studentId: string) {
         try {
             await approveStudent(studentId)
-            alert('Alumno aprobado exitosamente')
+            toast.success('Alumno aprobado exitosamente')
             loadData(profile)
         } catch (error: any) {
-            alert(`Error: ${error.message}`)
+            toast.error(error.message)
         }
     }
 
     async function handleDeny(studentId: string) {
-        if (!confirm('¿Estás seguro de denegar esta solicitud?')) return
-
         try {
             await denyStudent(studentId)
-            alert('Solicitud denegada')
+            toast.success('Solicitud denegada')
             loadData(profile)
         } catch (error: any) {
-            alert(`Error: ${error.message}`)
+            toast.error(error.message)
         }
     }
 
@@ -299,34 +297,32 @@ export default function TeacherDashboard() {
     }
 
     async function handleDelete(studentId: string, studentName: string) {
-        if (!confirm(`¿Estás seguro de eliminar a ${studentName}? Esta acción no se puede deshacer.`)) return
-
         try {
             await deleteStudent(studentId)
-            alert('Alumno eliminado')
+            toast.success(`${studentName} eliminado`)
             loadData(profile)
         } catch (error: any) {
-            alert(`Error: ${error.message}`)
+            toast.error(error.message)
         }
     }
 
     async function handleAddToTeam(studentId: string, teamId: string) {
         try {
             await addStudentToTeam(studentId, teamId)
+            toast.success('Alumno añadido al equipo')
             loadData(profile)
         } catch (error: any) {
-            alert(`Error: ${error.message}`)
+            toast.error(error.message)
         }
     }
 
     async function handleRemoveFromTeam(studentId: string) {
-        if (!confirm('¿Quitar este alumno del equipo?')) return
-
         try {
             await removeStudentFromTeam(studentId)
+            toast.success('Alumno quitado del equipo')
             loadData(profile)
         } catch (error: any) {
-            alert(`Error: ${error.message}`)
+            toast.error(error.message)
         }
     }
 
@@ -334,10 +330,10 @@ export default function TeacherDashboard() {
         const year = profile.tutor_group.charAt(0) // "1" or "2"
         try {
             await createTeam(year)
-            alert('Equipo creado')
+            toast.success('Equipo creado')
             loadData(profile)
         } catch (error: any) {
-            alert(`Error: ${error.message}`)
+            toast.error(error.message)
         }
     }
 
@@ -423,12 +419,10 @@ export default function TeacherDashboard() {
                                                             size="sm"
                                                             variant="ghost"
                                                             onClick={async () => {
-                                                                if (confirm('¿Eliminar este requisito?')) {
-                                                                    await deleteRequirement(req.id)
-                                                                    const reqs = await getRequirements(profile.id)
-                                                                    setRequirements(reqs)
-                                                                    toast.success('Requisito eliminado')
-                                                                }
+                                                                await deleteRequirement(req.id)
+                                                                const reqs = await getRequirements(profile.id)
+                                                                setRequirements(reqs)
+                                                                toast.success('Requisito eliminado')
                                                             }}
                                                         >
                                                             <Trash2 className="h-4 w-4" />
@@ -830,12 +824,10 @@ export default function TeacherDashboard() {
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
                                                 <Button size="sm" variant="ghost" onClick={async () => {
-                                                    if (confirm('¿Eliminar este requisito?')) {
-                                                        await deleteRequirement(req.id)
-                                                        const reqs = await getRequirements(profile.id)
-                                                        setRequirements(reqs)
-                                                        toast.success('Requisito eliminado')
-                                                    }
+                                                    await deleteRequirement(req.id)
+                                                    const reqs = await getRequirements(profile.id)
+                                                    setRequirements(reqs)
+                                                    toast.success('Requisito eliminado')
                                                 }}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>

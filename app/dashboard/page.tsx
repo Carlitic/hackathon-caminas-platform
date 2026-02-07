@@ -57,8 +57,6 @@ export default function DashboardRouter() {
     async function handleRepair(role: 'admin' | 'teacher' | 'student') {
         const roleName = role === 'admin' ? 'Administrador' : role === 'teacher' ? 'Profesor' : 'Estudiante';
 
-        if (!confirm(`¿Seguro que eres ${roleName}? Esto restaurará tu perfil.`)) return
-
         setStatus(`Reparando perfil de ${roleName}...`)
 
         let result;
