@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, CheckCircle, XCircle, Settings, Trophy, Plus, LifeBuoy } from "lucide-react"
+import { Users, CheckCircle, XCircle, Settings, Trophy, Plus, LifeBuoy, LogOut, Shield } from "lucide-react"
 import { getCurrentUserProfile } from "@/lib/auth"
 import {
     getPendingTutors,
@@ -20,6 +20,7 @@ import {
     createTeamAsAdmin
 } from "@/lib/admin"
 import { getSupportTickets, resolveSupportTicket } from "@/lib/wildcards"
+import { invalidateAllSessions, invalidateSessionsByRole, getJWTInfo } from "@/lib/session"
 import { toast } from "sonner"
 import {
     AlertDialog,
@@ -30,6 +31,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
+    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import {
     Dialog,
@@ -154,6 +156,34 @@ export default function AdminDashboard() {
         }
     }
 
+    // Session Management Functions
+    async function handleInvalidateAllSessions() {
+        try {
+            await invalidateAllSessions()
+            toast.success('Todas las sesiones han sido invalidadas. Los usuarios deberán hacer login de nuevo.')
+        } catch (error: any) {
+            toast.error(error.message)
+        }
+    }
+
+    async function handleInvalidateStudentSessions() {
+        try {
+            await invalidateSessionsByRole('student')
+            toast.success('Sesiones de estudiantes invalidadas')
+        } catch (error: any) {
+            toast.error(error.message)
+        }
+    }
+
+    async function handleInvalidateTeacherSessions() {
+        try {
+            await invalidateSessionsByRole('teacher')
+            toast.success('Sesiones de profesores invalidadas')
+        } catch (error: any) {
+            toast.error(error.message)
+        }
+    }
+
     if (loading) return <div className="flex h-screen items-center justify-center">Cargando...</div>
 
     return (
@@ -190,6 +220,10 @@ export default function AdminDashboard() {
                         <TabsTrigger value="support">
                             <LifeBuoy className="h-4 w-4 mr-2" />
                             Soporte ({supportTickets.filter(t => !t.resolved).length})
+                        </TabsTrigger>
+                        <TabsTrigger value="sessions">
+                            <Shield className="h-4 w-4 mr-2" />
+                            Sesiones JWT
                         </TabsTrigger>
                     </TabsList>
 
@@ -428,6 +462,166 @@ export default function AdminDashboard() {
                                             </div>
                                         ))
                                     )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Sessions Tab */}
+                    <TabsContent value="sessions" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Gestión de Sesiones JWT</CardTitle>
+                                <CardDescription>
+                                    Controla las sesiones de usuarios. Puedes invalidar sesiones para forzar que los usuarios vuelvan a hacer login.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {/* JWT Info */}
+                                <div className="rounded-lg border p-4 space-y-2 bg-muted/50">
+                                    <h3 className="font-semibold flex items-center gap-2">
+                                        <Shield className="h-4 w-4" />
+                                        Información JWT
+                                    </h3>
+                                    <div className="text-sm space-y-1 text-muted-foreground">
+                                        <p>• <strong>Proveedor:</strong> Supabase Auth</p>
+                                        <p>• <strong>Tipo:</strong> JWT (JSON Web Token)</p>
+                                        <p>• <strong>Almacenamiento:</strong> HTTP-only cookies (seguro)</p>
+                                        <p>• <strong>Expiración por defecto:</strong> 1 hora (3600s)</p>
+                                        <p>• <strong>Recomendado para Hackathon:</strong> 8 horas (28800s)</p>
+                                    </div>
+                                    <div className="pt-2 border-t">
+                                        <p className="text-sm">
+                                            <strong>Configurar expiración:</strong> Supabase Dashboard → Authentication → Settings → JWT Settings
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Session Controls */}
+                                <div className="space-y-4">
+                                    <h3 className="font-semibold">Invalidar Sesiones</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Al invalidar sesiones, los usuarios deberán volver a iniciar sesión con sus credenciales.
+                                        Útil cuando haces cambios importantes o por seguridad.
+                                    </p>
+
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        {/* Invalidate All */}
+                                        <Card className="border-destructive/50">
+                                            <CardHeader>
+                                                <CardTitle className="text-base">Todas las Sesiones</CardTitle>
+                                                <CardDescription>
+                                                    Invalida sesiones de todos los usuarios (estudiantes, profesores y admins)
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="destructive" className="w-full">
+                                                            <LogOut className="h-4 w-4 mr-2" />
+                                                            Invalidar Todas
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                Esto cerrará la sesión de TODOS los usuarios (incluido tú).
+                                                                Todos deberán hacer login de nuevo.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={handleInvalidateAllSessions}>
+                                                                Confirmar
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Invalidate Students */}
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="text-base">Sesiones de Estudiantes</CardTitle>
+                                                <CardDescription>
+                                                    Invalida solo las sesiones de los estudiantes
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="outline" className="w-full">
+                                                            <LogOut className="h-4 w-4 mr-2" />
+                                                            Invalidar Estudiantes
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Invalidar sesiones de estudiantes</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                Todos los estudiantes deberán hacer login de nuevo.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={handleInvalidateStudentSessions}>
+                                                                Confirmar
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Invalidate Teachers */}
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="text-base">Sesiones de Profesores</CardTitle>
+                                                <CardDescription>
+                                                    Invalida solo las sesiones de los profesores
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="outline" className="w-full">
+                                                            <LogOut className="h-4 w-4 mr-2" />
+                                                            Invalidar Profesores
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Invalidar sesiones de profesores</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                Todos los profesores deberán hacer login de nuevo.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={handleInvalidateTeacherSessions}>
+                                                                Confirmar
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </div>
+
+                                {/* Warning */}
+                                <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4">
+                                    <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">
+                                        ⚠️ Recomendaciones
+                                    </h4>
+                                    <ul className="text-sm space-y-1 text-yellow-700 dark:text-yellow-300">
+                                        <li>• <strong>Durante el Hackathon:</strong> NO invalidar sesiones (puede interrumpir el trabajo)</li>
+                                        <li>• <strong>Configurar expiración larga:</strong> 8-12 horas para el evento</li>
+                                        <li>• <strong>Usar solo en emergencias:</strong> Problemas de seguridad o cambios críticos</li>
+                                        <li>• <strong>Después del evento:</strong> Invalidar todas las sesiones y limpiar la BD</li>
+                                    </ul>
                                 </div>
                             </CardContent>
                         </Card>
