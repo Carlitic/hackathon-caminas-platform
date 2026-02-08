@@ -26,7 +26,40 @@ Plataforma completa para gestionar la Hackathon del instituto, incluyendo regist
 - npm o yarn
 - Cuenta de Supabase
 
-## ⚙️ Instalación
+**O simplemente:**
+- Docker (para ejecutar con un solo comando)
+
+## 🐳 Inicio Rápido con Docker (Recomendado)
+
+**La forma más fácil de ejecutar la aplicación:**
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/Carlitic/hackathon-caminas-platform.git
+cd hackathon-caminas-platform
+
+# 2. Crear archivo .env.local con tus credenciales de Supabase
+# NEXT_PUBLIC_SUPABASE_URL=tu-url
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-key
+
+# 3. Iniciar con Docker
+docker-compose up -d
+
+# 4. Abrir http://localhost:3000
+```
+
+**Comandos útiles:**
+```bash
+docker-compose logs -f    # Ver logs
+docker-compose down       # Detener
+docker-compose restart    # Reiniciar
+```
+
+Ver [DOCKER.md](DOCKER.md) para más detalles.
+
+---
+
+## ⚙️ Instalación Manual (Sin Docker)
 
 1. **Clonar el repositorio**
 ```bash
