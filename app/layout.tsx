@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader } from "@/components/site-header";
+import { VersionDisplay } from "@/components/version-display";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
           <div className="pt-4"> {/* Add some padding so content doesn't touch header immediately */}
             {children}
           </div>
+          <VersionDisplay />
           <Toaster />
         </ThemeProvider>
       </body>

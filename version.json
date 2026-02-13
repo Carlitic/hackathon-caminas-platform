@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "repository": "https://github.com/Carlitic/hackathon-caminas-platform",
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-02-13",
+      "title": "Lanzamiento Inicial",
+      "changes": [
+        {
+          "type": "feature",
+          "description": "Sistema de autenticación completo para estudiantes, profesores y administradores"
+        },
+        {
+          "type": "feature",
+          "description": "Sistema de aprobación de alumnos por tutores"
+        },
+        {
+          "type": "feature",
+          "description": "Sistema de aprobación de tutores por administrador"
+        },
+        {
+          "type": "feature",
+          "description": "Formación colaborativa de equipos (6 miembros: 2 DAW + 2 DAM + 2 ASIR)"
+        },
+        {
+          "type": "feature",
+          "description": "Sistema de votación para profesores"
+        },
+        {
+          "type": "feature",
+          "description": "Ranking en tiempo real de equipos"
+        },
+        {
+          "type": "feature",
+          "description": "Generación de certificados en PDF según posición"
+        },
+        {
+          "type": "feature",
+          "description": "Gestión de fases del evento por administrador"
+        },
+        {
+          "type": "feature",
+          "description": "Dashboard específico para cada rol (admin, profesor, estudiante)"
+        },
+        {
+          "type": "feature",
+          "description": "Soporte para Docker y despliegue fácil"
+        }
+      ]
+    }
+  ]
+}

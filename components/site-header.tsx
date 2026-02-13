@@ -2,6 +2,7 @@
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { HomeButton } from "@/components/home-button"
+import { GithubLink } from "@/components/github-link"
 
 export function SiteHeader() {
     return (
@@ -11,6 +12,7 @@ export function SiteHeader() {
                     <HomeButton />
                 </div>
                 <div className="flex items-center gap-2">
+                    <GithubLink />
                     <ThemeToggle />
                 </div>
             </div>

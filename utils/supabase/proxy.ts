@@ -49,7 +49,7 @@ export async function updateSession(request: NextRequest) {
     const path = request.nextUrl.pathname
 
     // Define public paths that don't require authentication
-    const publicPaths = ['/', '/login', '/register', '/register/teacher', '/ranking', '/dashboard']
+    const publicPaths = ['/', '/login', '/register', '/register/teacher', '/ranking', '/dashboard', '/changelog']
     const isPublicPath = publicPaths.some(p => path === p || path.startsWith('/auth'))
 
     // 1. If user is NOT logged in and tries to access a protected route
