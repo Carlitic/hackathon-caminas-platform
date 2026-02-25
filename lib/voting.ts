@@ -1,9 +1,9 @@
 import { supabase } from './supabase'
 
-// Vote for a team
+// Votar por un equipo
 export async function voteForTeam(teacherId: string, teamId: string) {
     try {
-        // Check if teacher already voted
+        // Comprobar si el profesor ya ha votado
         const { data: existingVote } = await supabase
             .from('votes')
             .select('id')
@@ -14,7 +14,7 @@ export async function voteForTeam(teacherId: string, teamId: string) {
             throw new Error('Ya has votado. Solo puedes votar una vez.')
         }
 
-        // Insert vote
+        // Insertar voto
         const { error: voteError } = await supabase
             .from('votes')
             .insert({
@@ -24,13 +24,13 @@ export async function voteForTeam(teacherId: string, teamId: string) {
 
         if (voteError) throw voteError
 
-        // Increment team votes
+        // Incrementar votos del equipo
         const { error: updateError } = await supabase.rpc('increment_team_votes', {
             team_id_param: teamId
         })
 
         if (updateError) {
-            // Fallback: manual update
+            // Respaldo: actualización manual
             const { data: team } = await supabase
                 .from('teams')
                 .select('votes')
@@ -51,7 +51,7 @@ export async function voteForTeam(teacherId: string, teamId: string) {
     }
 }
 
-// Get teacher's vote
+// Obtener voto del profesor
 export async function getTeacherVote(teacherId: string) {
     const { data, error } = await supabase
         .from('votes')
@@ -63,7 +63,7 @@ export async function getTeacherVote(teacherId: string) {
     return data
 }
 
-// Get all teams for voting
+// Obtener todos los equipos para votar
 export async function getTeamsForVoting() {
     const { data, error } = await supabase
         .from('teams')
@@ -78,7 +78,7 @@ export async function getTeamsForVoting() {
     return data
 }
 
-// Get ranking (all teams sorted by votes)
+// Obtener ranking (todos los equipos ordenados por votos)
 export async function getRanking() {
     const { data, error } = await supabase
         .from('teams')
@@ -91,14 +91,14 @@ export async function getRanking() {
 
     if (error) throw error
 
-    // Add position
+    // Añadir posición
     return data.map((team, index) => ({
         ...team,
         position: index + 1
     }))
 }
 
-// Create requirement
+// Crear requisito
 export async function createRequirement(teacherId: string, data: {
     title: string
     tag: string
@@ -116,7 +116,7 @@ export async function createRequirement(teacherId: string, data: {
     if (error) throw error
 }
 
-// Get all requirements
+// Obtener todos los requisitos
 export async function getRequirements() {
     const { data, error } = await supabase
         .from('requirements')
@@ -130,7 +130,7 @@ export async function getRequirements() {
     return data
 }
 
-// Delete requirement
+// Eliminar requisito
 export async function deleteRequirement(requirementId: string, teacherId: string) {
     const { error } = await supabase
         .from('requirements')

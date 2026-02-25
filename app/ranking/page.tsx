@@ -29,7 +29,7 @@ export default function RankingPage() {
 
             if (error) throw error
 
-            // Calculate vote counts and sort
+            // Calcular conteos de votos y ordenar
             const teamsWithVotes = (data || []).map(team => ({
                 id: team.id,
                 name: team.name,
@@ -37,7 +37,7 @@ export default function RankingPage() {
                 members: team.members?.length || 0
             }))
 
-            // Sort by votes descending
+            // Ordenar por votos descendente
             teamsWithVotes.sort((a, b) => b.votes - a.votes)
 
             setRankedTeams(teamsWithVotes)
@@ -92,7 +92,7 @@ export default function RankingPage() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 py-12 px-4">
             <div className="container mx-auto max-w-4xl space-y-8">
-                {/* Header */}
+                {/* Cabecera */}
                 <div className="text-center space-y-4">
                     <Trophy className="h-20 w-20 text-yellow-500 mx-auto" />
                     <h1 className="text-4xl font-bold tracking-tight">Ranking en Vivo</h1>
@@ -119,9 +119,9 @@ export default function RankingPage() {
                     </Card>
                 ) : (
                     <>
-                        {/* Podium - Top 3 */}
+                        {/* Podio - Top 3 */}
                         <div className="grid md:grid-cols-3 gap-6 mb-8">
-                            {/* 2nd Place */}
+                            {/* 2º Puesto */}
                             {rankedTeams[1] && (
                                 <div className="md:order-1 flex flex-col items-center">
                                     <div className="w-full">
@@ -145,7 +145,7 @@ export default function RankingPage() {
                                 </div>
                             )}
 
-                            {/* 1st Place */}
+                            {/* 1º Puesto */}
                             {rankedTeams[0] && (
                                 <div className="md:order-2 flex flex-col items-center md:-mt-8">
                                     <div className="w-full">
@@ -169,7 +169,7 @@ export default function RankingPage() {
                                 </div>
                             )}
 
-                            {/* 3rd Place */}
+                            {/* 3º Puesto */}
                             {rankedTeams[2] && (
                                 <div className="md:order-3 flex flex-col items-center">
                                     <div className="w-full">
@@ -194,7 +194,7 @@ export default function RankingPage() {
                             )}
                         </div>
 
-                        {/* Rest of teams */}
+                        {/* Resto de equipos */}
                         {rankedTeams.length > 3 && (
                             <Card>
                                 <CardHeader>

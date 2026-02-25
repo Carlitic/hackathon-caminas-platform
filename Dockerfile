@@ -2,7 +2,7 @@
 # Multi-stage build para optimizar el tamaño de la imagen
 
 # ============================================
-# Stage 1: Dependencies
+# Etapa 1: Dependencias
 # ============================================
 FROM node:24-alpine AS deps
 RUN apk add --no-cache libc6-compat
@@ -13,7 +13,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci
 
 # ============================================
-# Stage 2: Builder
+# Etapa 2: Constructor
 # ============================================
 FROM node:24-alpine AS builder
 WORKDIR /app
@@ -30,7 +30,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # ============================================
-# Stage 3: Runner (Producción)
+# Etapa 3: Ejecutor (Producción)
 # ============================================
 FROM node:24-alpine AS runner
 WORKDIR /app

@@ -6,7 +6,7 @@ export async function updateSession(request: NextRequest) {
         request,
     })
 
-    // SAFE GUARD: If no Supabase URL is provided (or is default), skip middleware logic to prevent crash
+    // MEDIDA DE SEGURIDAD: Si no se proporciona una URL de Supabase (o es la predeterminada), obviar la lógica del middleware para evitar cierres inesperados
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -38,9 +38,9 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    // IMPORTANT: Avoid writing any logic between createServerClient and
-    // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-    // issues with users being randomly logged out.
+    // IMPORTANTE: Evita escribir cualquier lógica entre createServerClient y
+    // supabase.auth.getUser(). Un simple error podría hacer muy difícil de depurar
+    // los problemas con usuarios que cierran sesión aleatoriamente.
 
     const {
         data: { user },
@@ -48,25 +48,24 @@ export async function updateSession(request: NextRequest) {
 
     const path = request.nextUrl.pathname
 
-    // Define public paths that don't require authentication
+    // Rutas públicas que NO requieren iniciar sesión (incluye /changelog para el historial de versiones)
     const publicPaths = ['/', '/login', '/register', '/register/teacher', '/ranking', '/dashboard', '/changelog']
     const isPublicPath = publicPaths.some(p => path === p || path.startsWith('/auth'))
 
-    // 1. If user is NOT logged in and tries to access a protected route
+    // 1. Si el usuario NO ha iniciado sesión e intenta acceder a una ruta protegida
     if (!user && !isPublicPath) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
     }
 
-    // 2. If user IS logged in and tries to access auth pages (login/register)
+    // 2. Si el usuario SÍ ha iniciado sesión e intenta acceder a páginas de autenticación (login/registro)
     if (user && (path === '/login' || path === '/register' || path === '/register/teacher')) {
-        // Redirect to a default dashboard. Since we don't know the role easily without DB query (and we want to avoid DB usage in middleware if possible, 
-        // though we could get it from metadata if updated), we can just let them go to the landing or a generic 'dashboard' that redirects.
-        // For now, let's redirect to landing, or better, check if we can get metadata.
-        // Actually, preventing /login access is good UX.
+        // Redirigir a un dashboard por defecto. Como no sabemos el rol fácilmente sin una consulta a la BD
+        // (y queremos evitar el uso de la BD en el middleware si es posible), simplemente los enviamos
+        // al dashboard que redirigirá según corresponda. Prevenir el acceso al login es una buena UX.
         const url = request.nextUrl.clone()
-        url.pathname = '/dashboard' // Redirect to the router page which handles role-based access
+        url.pathname = '/dashboard' // Redirigir a la página enrutadora que maneja el acceso por roles
         return NextResponse.redirect(url)
     }
 

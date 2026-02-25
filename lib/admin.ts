@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-// Repair Admin Profile (Self-Service)
+// Reparar Perfil de Admin (Autoservicio)
 export async function repairAdminProfile() {
     try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -23,7 +23,7 @@ export async function repairAdminProfile() {
     }
 }
 
-// Repair Teacher Profile (Self-Service)
+// Reparar Perfil de Profesor (Autoservicio)
 export async function repairTeacherProfile() {
     try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -48,7 +48,7 @@ export async function repairTeacherProfile() {
     }
 }
 
-// Repair Student Profile (Self-Service)
+// Reparar Perfil de Estudiante (Autoservicio)
 export async function repairStudentProfile() {
     try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -61,8 +61,8 @@ export async function repairStudentProfile() {
                 email: user.email!,
                 full_name: 'Estudiante (Recuperado)',
                 role: 'student',
-                cycle: 'DAW', // Default fallback
-                approval_status: 'pending' // Require teacher approval
+                cycle: 'DAW', // Respaldo por defecto
+                approval_status: 'pending' // Requiere aprobación del profesor
             })
 
         if (error) throw error
@@ -72,7 +72,7 @@ export async function repairStudentProfile() {
     }
 }
 
-// Get pending tutor approvals
+// Obtener aprobaciones de tutor pendientes
 export async function getPendingTutors() {
     const { data, error } = await supabase
         .from('profiles')
@@ -86,7 +86,7 @@ export async function getPendingTutors() {
     return data
 }
 
-// Get all approved tutors
+// Obtener todos los tutores aprobados
 export async function getApprovedTutors() {
     const { data, error } = await supabase
         .from('profiles')
@@ -100,9 +100,9 @@ export async function getApprovedTutors() {
     return data
 }
 
-// Approve tutor
+// Aprobar tutor
 export async function approveTutor(tutorId: string) {
-    // Check if there's already an approved tutor for this group
+    // Comprobar si ya hay un tutor aprobado para este grupo
     const { data: tutor } = await supabase
         .from('profiles')
         .select('tutor_group')
@@ -133,7 +133,7 @@ export async function approveTutor(tutorId: string) {
     if (error) throw error
 }
 
-// Deny tutor
+// Denegar tutor
 export async function denyTutor(tutorId: string) {
     const { error } = await supabase
         .from('profiles')
@@ -143,7 +143,7 @@ export async function denyTutor(tutorId: string) {
     if (error) throw error
 }
 
-// Revoke tutor approval
+// Revocar aprobación de tutor
 export async function revokeTutorApproval(tutorId: string) {
     const { error } = await supabase
         .from('profiles')
@@ -153,7 +153,7 @@ export async function revokeTutorApproval(tutorId: string) {
     if (error) throw error
 }
 
-// Get event config
+// Obtener configuración del evento
 export async function getEventConfig() {
     const { data, error } = await supabase
         .from('event_config')
@@ -164,7 +164,7 @@ export async function getEventConfig() {
     return data
 }
 
-// Update event phase
+// Actualizar fase del evento
 export async function updateEventPhase(phase: string) {
     const { error } = await supabase
         .from('event_config')
@@ -174,7 +174,7 @@ export async function updateEventPhase(phase: string) {
     if (error) throw error
 }
 
-// Get all teams with stats
+// Obtener todos los equipos con estadísticas
 export async function getAllTeamsWithStats() {
     const { data, error } = await supabase
         .from('teams')
@@ -189,9 +189,9 @@ export async function getAllTeamsWithStats() {
     return data
 }
 
-// Create team as admin
+// Crear equipo como admin
 export async function createTeamAsAdmin(yearLevel: string) {
-    // Get next team number
+    // Obtener el siguiente número de equipo
     const { data: teams } = await supabase
         .from('teams')
         .select('team_number')
@@ -205,7 +205,7 @@ export async function createTeamAsAdmin(yearLevel: string) {
         .insert({
             name: `Equipo ${nextNumber}`,
             team_number: nextNumber,
-            year: parseInt(yearLevel), // Use 'year' field as integer
+            year: parseInt(yearLevel), // Usar el campo 'year' como entero
             status: 'PENDING'
         })
         .select()

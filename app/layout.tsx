@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader } from "@/components/site-header";
 import { VersionDisplay } from "@/components/version-display";
+import { RealtimeProvider } from "@/components/providers/realtime-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +27,11 @@ export const metadata: Metadata = {
 
 
 
+/**
+ * Layout principal ("Root Layout") de la aplicación.
+ * Este componente envuelve a todas las páginas y define la estructura HTML base,
+ * los proveedores de contexto (tema) y los componentes globales (Header, Version Display).
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -35,18 +41,29 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
+        {/* ThemeProvider maneja el cambio entre modo claro y oscuro */}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
+          {/* Cabecera superior de la web, persistente en todas las páginas */}
           <SiteHeader />
-          <div className="pt-4"> {/* Add some padding so content doesn't touch header immediately */}
+          
+          <div className="pt-4"> {/* Añade espaciado para que el contenido no quede pegado a la cabecera */}
             {children}
           </div>
+          
+          {/* Muestra la versión de la app permanentemente abajo a la derecha */}
           <VersionDisplay />
+          
+          {/* Proveedor de notificaciones en tiempo real para Comodines */}
+          <RealtimeProvider />
+          
+          {/* Toaster se encarga de mostrar pequeñas notificaciones (toasts) al usuario */}
           <Toaster />
         </ThemeProvider>
       </body>

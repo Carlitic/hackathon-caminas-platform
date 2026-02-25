@@ -40,7 +40,7 @@ export default function RegisterPage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
 
-        // Validate Email
+        // Validar Email
         const isAdminEmail = formData.email === 'carloscastanosblanco@gmail.com'
         const isConselleria = formData.email.endsWith('@alu.edu.gva.es')
 

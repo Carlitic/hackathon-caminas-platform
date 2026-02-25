@@ -11,7 +11,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
 
       <main className="flex-1">
-        {/* Hero Section */}
+        {/* Sección Hero */}
         <section className="w-full px-4 sm:px-8 pb-8 pt-16 md:py-24">
           <div className="max-w-5xl mx-auto flex flex-col items-center gap-4 text-center">
             <Image
@@ -61,7 +61,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Feature Cards */}
+        {/* Tarjetas de Características */}
         <section className="w-full py-12 px-4 sm:px-8">
           <div className="max-w-6xl mx-auto grid gap-8 md:grid-cols-3 justify-items-center">
             <Card className="w-full max-w-sm hover:shadow-md transition-shadow">

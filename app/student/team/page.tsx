@@ -32,7 +32,7 @@ export default function StudentTeamPage() {
     const [helpMessage, setHelpMessage] = useState("")
     const [helpDialogOpen, setHelpDialogOpen] = useState(false)
 
-    // Team structure requirements
+    // Requisitos de estructura del equipo
     const requiredRoles = ['1º DAW', '1º DAW', '1º DAM', '1º DAM', '1º ASIR', '1º ASIR']
 
     useEffect(() => {
@@ -43,7 +43,7 @@ export default function StudentTeamPage() {
         setLoading(true)
         try {
             const userProfile = await getCurrentUserProfile()
-            if (!userProfile) return // middleware handles redirect
+            if (!userProfile) return // El middleware maneja la redirección
 
             setProfile(userProfile)
 
@@ -53,7 +53,7 @@ export default function StudentTeamPage() {
             const teachersData = await getAvailableTeachers()
             setTeachers(teachersData)
 
-            // Load wildcard status if team exists
+            // Cargar estado del comodín si el equipo existe
             if (teamData?.id) {
                 const wildcards = await getTeamWildcardsStatus(teamData.id)
                 setWildcardStatus(wildcards)
@@ -84,7 +84,7 @@ export default function StudentTeamPage() {
             setHelpMessage("")
             setHelpDialogOpen(false)
 
-            // Reload wildcard status
+            // Recargar estado del comodín
             const wildcards = await getTeamWildcardsStatus(team.id)
             setWildcardStatus(wildcards)
         } catch (error: any) {
@@ -94,7 +94,7 @@ export default function StudentTeamPage() {
 
     if (loading) return <div className="flex h-screen items-center justify-center">Cargando...</div>
 
-    // Helper to build the visual team slots
+    // Función auxiliar para construir los espacios visuales del equipo
     const teamSlots = requiredRoles.map((role, index) => {
         const cycle = role
         const membersInCycle = team?.members?.filter((m: any) => m.cycle === cycle) || []
@@ -172,7 +172,7 @@ export default function StudentTeamPage() {
                 </div>
             </header>
 
-            {/* Status Banner */}
+            {/* Banner de Estado */}
             <div className={`border-l-4 p-4 rounded ${isTeamReady ? 'bg-green-100 border-green-500 dark:bg-green-900/30' : 'bg-yellow-100 border-yellow-500 dark:bg-yellow-900/30'}`}>
                 <div className="flex items-center justify-between">
                     <div>
@@ -189,7 +189,7 @@ export default function StudentTeamPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-                {/* Roster Card */}
+                {/* Tarjeta de Lista */}
                 <Card className="md:col-span-2">
                     <CardHeader>
                         <CardTitle>Composición del Equipo: {teamName}</CardTitle>
@@ -220,7 +220,7 @@ export default function StudentTeamPage() {
                     </CardContent>
                 </Card>
 
-                {/* GitHub URL Card */}
+                {/* Tarjeta URL de GitHub */}
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">

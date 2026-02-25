@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-// Get pending students for approval (only for tutors)
+// Obtener estudiantes pendientes de aprobación (solo para tutores)
 export async function getPendingStudents(tutorId: string) {
     const { data: tutor } = await supabase
         .from('profiles')
@@ -22,7 +22,7 @@ export async function getPendingStudents(tutorId: string) {
     return data
 }
 
-// Get approved students (my students)
+// Obtener estudiantes aprobados (mis estudiantes)
 export async function getMyStudents(tutorId: string) {
     const { data, error } = await supabase
         .from('profiles')
@@ -36,7 +36,7 @@ export async function getMyStudents(tutorId: string) {
     return data
 }
 
-// Approve student
+// Aprobar estudiante
 export async function approveStudent(studentId: string) {
     const { error } = await supabase
         .from('profiles')
@@ -46,7 +46,7 @@ export async function approveStudent(studentId: string) {
     if (error) throw error
 }
 
-// Deny student
+// Denegar estudiante
 export async function denyStudent(studentId: string) {
     const { error } = await supabase
         .from('profiles')
@@ -56,9 +56,9 @@ export async function denyStudent(studentId: string) {
     if (error) throw error
 }
 
-// Delete student
+// Eliminar estudiante
 export async function deleteStudent(studentId: string) {
-    // First delete from auth
+    // Primero eliminar de auth
     const { error: profileError } = await supabase
         .from('profiles')
         .delete()
@@ -67,7 +67,7 @@ export async function deleteStudent(studentId: string) {
     if (profileError) throw profileError
 }
 
-// Update student
+// Actualizar estudiante
 export async function updateStudent(studentId: string, data: { full_name: string; email: string; cycle: string }) {
     const { error } = await supabase
         .from('profiles')
@@ -77,7 +77,7 @@ export async function updateStudent(studentId: string, data: { full_name: string
     if (error) throw error
 }
 
-// Get teams
+// Obtener equipos
 export async function getTeams(yearLevel?: string) {
     let query = supabase
         .from('teams')
@@ -97,11 +97,11 @@ export async function getTeams(yearLevel?: string) {
     return data
 }
 
-// Get students without team (for team formation)
+// Obtener estudiantes sin equipo (para la formación de equipos)
 export async function getStudentsWithoutTeam(tutorGroup: string) {
-    // Extract subject from tutor_group (e.g., "1º DAW" -> "DAW")
+    // Extraer especialidad de tutor_group (ej., "1º DAW" -> "DAW")
     const subject = tutorGroup.split(' ')[1]
-    const year = tutorGroup.split(' ')[0].charAt(0) // "1" or "2"
+    const year = tutorGroup.split(' ')[0].charAt(0) // "1" o "2"
 
     const { data, error } = await supabase
         .from('profiles')
@@ -110,14 +110,14 @@ export async function getStudentsWithoutTeam(tutorGroup: string) {
         .eq('approval_status', 'approved')
         .eq('year_level', year)
         .is('team_id', null)
-        .ilike('cycle', `%${subject}%`) // Only students from same subject
+        .ilike('cycle', `%${subject}%`) // Solo estudiantes de la misma especialidad
         .order('full_name')
 
     if (error) throw error
     return data
 }
 
-// Add student to team
+// Añadir estudiante al equipo
 export async function addStudentToTeam(studentId: string, teamId: string) {
     const { error } = await supabase
         .from('profiles')
@@ -126,11 +126,11 @@ export async function addStudentToTeam(studentId: string, teamId: string) {
 
     if (error) throw error
 
-    // Check if team is now ready (6 members)
+    // Comprobar si el equipo ya está listo (6 miembros)
     await checkTeamStatus(teamId)
 }
 
-// Remove student from team
+// Eliminar estudiante del equipo
 export async function removeStudentFromTeam(studentId: string) {
     const { data: student } = await supabase
         .from('profiles')
@@ -145,13 +145,13 @@ export async function removeStudentFromTeam(studentId: string) {
 
     if (error) throw error
 
-    // Update team status
+    // Actualizar el estado del equipo
     if (student?.team_id) {
         await checkTeamStatus(student.team_id)
     }
 }
 
-// Check and update team status
+// Comprobar y actualizar el estado del equipo
 async function checkTeamStatus(teamId: string) {
     const { data: members } = await supabase
         .from('profiles')
@@ -160,7 +160,7 @@ async function checkTeamStatus(teamId: string) {
 
     if (!members) return
 
-    // Check if team has 6 members from same year
+    // Comprobar si el equipo tiene 6 miembros del mismo curso
     const isReady = members.length === 6 &&
         members.every(m => m.year_level === members[0].year_level)
 
@@ -170,9 +170,9 @@ async function checkTeamStatus(teamId: string) {
         .eq('id', teamId)
 }
 
-// Create new team
+// Crear nuevo equipo
 export async function createTeam(yearLevel: string) {
-    // Get next team number
+    // Obtener el siguiente número de equipo
     const { data: teams } = await supabase
         .from('teams')
         .select('team_number')
@@ -186,7 +186,7 @@ export async function createTeam(yearLevel: string) {
         .insert({
             name: `Equipo ${nextNumber}`,
             team_number: nextNumber,
-            year: parseInt(yearLevel), // Use 'year' field as integer
+            year: parseInt(yearLevel), // Usar el campo 'year' como entero
             status: 'PENDING'
         })
         .select()
@@ -195,7 +195,7 @@ export async function createTeam(yearLevel: string) {
     if (error) throw error
     return data
 }
-// --- REQUIREMENTS ---
+// --- REQUISITOS ---
 
 export async function getRequirements(teacherId: string) {
     const { data, error } = await supabase
@@ -266,25 +266,20 @@ export async function deleteRequirement(id: string) {
     if (error) throw error
 }
 
-// --- VOTING ---
+// --- VOTACIONES ---
 
-export async function castVote(teamId: number) { // teamId is uuid in DB but likely number in current frontend? Check schema.
-    // Wait, teams.id is UUID. Frontend probably uses team_number as ID? 
-    // Let's check getTeams(). It returns *. 
-    // We should use UUID for voting.
+export async function castVote(teamId: number) { // teamId es uuid en DB, usar number temporalmente si se requiere
+    // Asumir que usamos team_number o uuid real para VOTAR.
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error("No user")
 
-    // First find the real UUID of the team if we passed a number (or handle both)
-    // Assuming teamId passed here is the UUID from the UI map.
-
-    // We use UPSERT on teacher_id to handle "Change Vote"
+    // Usar UPSERT en teacher_id para gestionar "Cambiar Voto"
     const { error } = await supabase
         .from('votes')
         .upsert({
             teacher_id: user.id,
-            team_id: teamId // Type mismatch potential if UI sends number
+            team_id: teamId // Riesgo de desajuste de tipo si la UI envía número en vez de UUID
         }, { onConflict: 'teacher_id' })
 
     if (error) throw error
@@ -300,6 +295,6 @@ export async function getMyVote() {
         .eq('teacher_id', user.id)
         .single()
 
-    if (error && error.code !== 'PGRST116') throw error // Ignore 'not found'
+    if (error && error.code !== 'PGRST116') throw error // Ignorar error 'not found'
     return data ? data.team_id : null
 }

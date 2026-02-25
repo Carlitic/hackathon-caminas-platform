@@ -21,22 +21,22 @@ export default function DashboardRouter() {
             const profile = await getCurrentUserProfile()
 
             if (!profile) {
-                // Zombie state: Auth exists but Profile missing/unreachable
+                // Estado zombie: Auth existe pero el Perfil falta/es inaccesible
                 throw new Error("No estás registrado en la base de datos (Perfil no encontrado).")
             }
 
-            // Redirect based on role
+            // Redirigir basado en el rol
             if (profile.role === 'admin') {
                 router.push('/admin/dashboard')
             } else if (profile.role === 'teacher') {
-                // Check if tutor or regular teacher
+                // Comprobar si es tutor o profesor regular
                 if (profile.is_tutor) {
                     router.push('/teacher/dashboard')
                 } else {
                     router.push('/teacher/general')
                 }
             } else {
-                // Student
+                // Estudiante
                 router.push('/student/team')
             }
 
@@ -45,7 +45,7 @@ export default function DashboardRouter() {
             setError(error.message)
             setStatus("Error crítico: No se puede cargar tu perfil. Revisa el error arriba.")
 
-            // Allow manual logout/repair but DO NOT redirect automatically in debug mode
+            // Permitir logout/reparación manual pero NO redirigir automáticamente en modo debug
         }
     }
 

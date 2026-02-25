@@ -1,7 +1,7 @@
 import { supabase } from "./supabase"
 
 // =====================================================
-// WILDCARD / SUPPORT TICKET FUNCTIONS
+// FUNCIONES DE COMODINES / SOLICITUDES DE AYUDA
 // =====================================================
 
 export async function getTeamWildcardsStatus(teamId: string) {
@@ -16,7 +16,7 @@ export async function getTeamWildcardsStatus(teamId: string) {
     const MAX_DAILY_WILDCARDS = 5
     const today = new Date().toISOString().split('T')[0]
 
-    // Check if reset is needed
+    // Comprobar si se necesita restablecer
     const usedToday = data.last_wildcard_reset === today ? data.wildcards_used_today : 0
     const remaining = Math.max(0, MAX_DAILY_WILDCARDS - usedToday)
 
@@ -31,7 +31,7 @@ export async function createSupportTicket(teamId: string, message: string) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error("Not authenticated")
 
-    // Call the database function that handles validation and creation
+    // Llamar a la función de la base de datos que maneja la validación y creación
     const { data, error } = await supabase.rpc('create_support_ticket', {
         p_team_id: teamId,
         p_created_by: user.id,
@@ -85,7 +85,7 @@ export async function resolveSupportTicket(ticketId: string) {
 }
 
 // =====================================================
-// TEAM VALIDATION FUNCTIONS
+// FUNCIONES DE VALIDACIÓN DE EQUIPOS
 // =====================================================
 
 export async function validateTeamComposition(teamId: string) {
@@ -107,14 +107,14 @@ export async function getTeamCompositionSummary(teamId: string) {
 }
 
 export async function markTeamAsReady(teamId: string) {
-    // First validate composition
+    // Primero validar la composición
     const validation = await validateTeamComposition(teamId)
 
     if (!validation.valid) {
         throw new Error(`Equipo no válido: ${validation.errors.join(', ')}`)
     }
 
-    // Update team status (trigger will also validate)
+    // Actualizar estado del equipo (el trigger también validará)
     const { error } = await supabase
         .from('teams')
         .update({ status: 'READY' })

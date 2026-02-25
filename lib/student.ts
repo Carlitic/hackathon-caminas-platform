@@ -2,9 +2,9 @@ import { createClient } from '@/lib/supabase/client'
 
 const supabase = createClient()
 
-// Get current student's team
+// Obtener el equipo del estudiante actual
 export async function getMyTeam(studentId: string) {
-    // First get the student's team_id
+    // Primero obtener el team_id del estudiante
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('team_id')
@@ -14,7 +14,7 @@ export async function getMyTeam(studentId: string) {
     if (profileError) throw profileError
     if (!profile.team_id) return null
 
-    // Then get the team details and members
+    // Luego obtener los detalles del equipo y sus miembros
     const { data: team, error: teamError } = await supabase
         .from('teams')
         .select(`
@@ -35,12 +35,36 @@ export async function getMyTeam(studentId: string) {
     return team
 }
 
-// Get available teachers for help requests (Wildcards)
 export async function getAvailableTeachers() {
     const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, subjects')
         .eq('role', 'teacher')
+
+    if (error) throw error
+    return data
+}
+
+// Actualizar información pública del proyecto del equipo
+export async function updateProjectDetails(
+    teamId: string, 
+    title?: string, 
+    description?: string, 
+    githubUrl?: string, 
+    imageUrl?: string
+) {
+    const updates: any = {}
+    if (title !== undefined) updates.project_title = title
+    if (description !== undefined) updates.project_description = description
+    if (githubUrl !== undefined) updates.github_url = githubUrl
+    if (imageUrl !== undefined) updates.project_image_url = imageUrl
+
+    const { data, error } = await supabase
+        .from('teams')
+        .update(updates)
+        .eq('id', teamId)
+        .select()
+        .single()
 
     if (error) throw error
     return data

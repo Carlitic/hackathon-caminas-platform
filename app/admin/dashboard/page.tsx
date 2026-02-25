@@ -60,7 +60,7 @@ export default function AdminDashboard() {
     const [teams, setTeams] = useState<any[]>([])
     const [supportTickets, setSupportTickets] = useState<any[]>([])
 
-    // Dialog States
+    // Estados de los Diálogos
     const [actionToConfirm, setActionToConfirm] = useState<{
         type: 'deny' | 'revoke' | 'phase',
         data: any,
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
         }
     }
 
-    // Session Management Functions
+    // Funciones de Gestión de Sesión
     async function handleInvalidateAllSessions() {
         try {
             await invalidateAllSessions()
@@ -227,9 +227,9 @@ export default function AdminDashboard() {
                         </TabsTrigger>
                     </TabsList>
 
-                    {/* Tutors Tab */}
+                    {/* Pestaña Tutores */}
                     <TabsContent value="tutors" className="space-y-4">
-                        {/* Pending Tutors */}
+                        {/* Tutores Pendientes */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Solicitudes Pendientes ({pendingTutors.length})</CardTitle>
@@ -277,7 +277,7 @@ export default function AdminDashboard() {
                             </CardContent>
                         </Card>
 
-                        {/* Approved Tutors */}
+                        {/* Tutores Aprobados */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Tutores Aprobados ({approvedTutors.length})</CardTitle>
@@ -319,7 +319,7 @@ export default function AdminDashboard() {
                         </Card>
                     </TabsContent>
 
-                    {/* Event Tab */}
+                    {/* Pestaña Evento */}
                     <TabsContent value="event" className="space-y-4">
                         <Card>
                             <CardHeader>
@@ -357,7 +357,7 @@ export default function AdminDashboard() {
                         </Card>
                     </TabsContent>
 
-                    {/* Teams Tab */}
+                    {/* Pestaña Equipos */}
                     <TabsContent value="teams" className="space-y-4">
                         <Card>
                             <CardHeader>
@@ -412,7 +412,7 @@ export default function AdminDashboard() {
                         </Card>
                     </TabsContent>
 
-                    {/* Support Tickets Tab */}
+                    {/* Pestaña Solicitudes de Ayuda */}
                     <TabsContent value="support" className="space-y-4">
                         <Card>
                             <CardHeader>
@@ -467,7 +467,7 @@ export default function AdminDashboard() {
                         </Card>
                     </TabsContent>
 
-                    {/* Sessions Tab */}
+                    {/* Pestaña Sesiones */}
                     <TabsContent value="sessions" className="space-y-4">
                         <Card>
                             <CardHeader>
@@ -477,7 +477,7 @@ export default function AdminDashboard() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                {/* JWT Info */}
+                                {/* Información JWT */}
                                 <div className="rounded-lg border p-4 space-y-2 bg-muted/50">
                                     <h3 className="font-semibold flex items-center gap-2">
                                         <Shield className="h-4 w-4" />
@@ -497,7 +497,7 @@ export default function AdminDashboard() {
                                     </div>
                                 </div>
 
-                                {/* Session Controls */}
+                                {/* Controles de Sesión */}
                                 <div className="space-y-4">
                                     <h3 className="font-semibold">Invalidar Sesiones</h3>
                                     <p className="text-sm text-muted-foreground">
@@ -506,7 +506,7 @@ export default function AdminDashboard() {
                                     </p>
 
                                     <div className="grid gap-4 md:grid-cols-2">
-                                        {/* Invalidate All */}
+                                        {/* Invalidar Todos */}
                                         <Card className="border-destructive/50">
                                             <CardHeader>
                                                 <CardTitle className="text-base">Todas las Sesiones</CardTitle>
@@ -541,7 +541,7 @@ export default function AdminDashboard() {
                                             </CardContent>
                                         </Card>
 
-                                        {/* Invalidate Students */}
+                                        {/* Invalidar Estudiantes */}
                                         <Card>
                                             <CardHeader>
                                                 <CardTitle className="text-base">Sesiones de Estudiantes</CardTitle>
@@ -575,7 +575,7 @@ export default function AdminDashboard() {
                                             </CardContent>
                                         </Card>
 
-                                        {/* Invalidate Teachers */}
+                                        {/* Invalidar Profesores */}
                                         <Card>
                                             <CardHeader>
                                                 <CardTitle className="text-base">Sesiones de Profesores</CardTitle>
@@ -611,7 +611,7 @@ export default function AdminDashboard() {
                                     </div>
                                 </div>
 
-                                {/* Warning */}
+                                {/* Advertencia */}
                                 <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4">
                                     <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">
                                         ⚠️ Recomendaciones
@@ -629,7 +629,7 @@ export default function AdminDashboard() {
                 </Tabs>
             </div>
 
-            {/* Confirmation Dialog */}
+            {/* Diálogo de Confirmación */}
             <AlertDialog open={!!actionToConfirm} onOpenChange={() => setActionToConfirm(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -652,7 +652,7 @@ export default function AdminDashboard() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Create Team Dialog */}
+            {/* Diálogo Crear Equipo */}
             <Dialog open={createTeamDialog} onOpenChange={setCreateTeamDialog}>
                 <DialogContent>
                     <DialogHeader>

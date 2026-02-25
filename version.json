@@ -1,7 +1,18 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "repository": "https://github.com/Carlitic/hackathon-caminas-platform",
   "changelog": [
+    {
+      "version": "1.1.0",
+      "date": "2026-02-25",
+      "title": "Notificaciones en Tiempo Real",
+      "changes": [
+        {
+          "type": "feature",
+          "description": "Sistema de notificaciones vía web-socket para que profesores y estudiantes sean avisados instantáneamente al solicitar 'Comodines'"
+        }
+      ]
+    },
     {
       "version": "1.0.0",
       "date": "2026-02-13",

@@ -54,7 +54,7 @@ export default function GeneralTeacherDashboard() {
     })
     const [teams, setTeams] = useState<any[]>([])
 
-    // Voting State
+    // Estado de Votación
     const [myVote, setMyVote] = useState<number | null>(null)
     const [votingOpen, setVotingOpen] = useState(true)
 
@@ -62,7 +62,7 @@ export default function GeneralTeacherDashboard() {
         checkAuth()
         async function loadTeams() {
             try {
-                const t = await getTeams(undefined) // Get all teams
+                const t = await getTeams(undefined) // Obtener todos los equipos
                 setTeams(t)
             } catch (e) { }
         }
@@ -284,7 +284,7 @@ export default function GeneralTeacherDashboard() {
                                     <Badge variant={votingOpen ? "default" : "destructive"}>
                                         {votingOpen ? "Votación Activa" : "Votación Finalizada"}
                                     </Badge>
-                                    {/* SIMULATION TOGGLE */}
+                                    {/* INTERRUPTOR DE SIMULACIÓN */}
                                     <Button size="xs" variant="outline" onClick={() => setVotingOpen(!votingOpen)}>
                                         {votingOpen ? "Simular Cierre" : "Simular Apertura"}
                                     </Button>

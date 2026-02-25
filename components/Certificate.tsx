@@ -18,7 +18,7 @@ export function Certificate({ position, teamName, studentName }: CertificateProp
                 return {
                     title: "Certificado de Oro",
                     subtitle: "🏆 Primer Puesto",
-                    subtitlePDF: "Primer Puesto", // Version without emoji for PDF
+                    subtitlePDF: "Primer Puesto", // Versión sin emoji para el PDF
                     icon: <Trophy className="h-16 w-16 text-yellow-500" />,
                     gradient: "bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600",
                     borderColor: "border-yellow-500"
@@ -62,7 +62,7 @@ export function Certificate({ position, teamName, studentName }: CertificateProp
             format: 'a4'
         })
 
-        // Helper function to clean special characters for PDF
+        // Función auxiliar para limpiar caracteres especiales para el PDF
         const cleanText = (text: string) => {
             return text
                 .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
@@ -73,27 +73,27 @@ export function Certificate({ position, teamName, studentName }: CertificateProp
                 .replace(/ò/g, 'o').replace(/ù/g, 'u')
         }
 
-        // Set colors based on position
-        let primaryColor: [number, number, number] = [0, 158, 226] // Default blue
-        if (position === 1) primaryColor = [255, 215, 0] // Gold
-        else if (position === 2) primaryColor = [192, 192, 192] // Silver
-        else if (position === 3) primaryColor = [205, 127, 50] // Bronze
+        // Establecer colores según la posición
+        let primaryColor: [number, number, number] = [0, 158, 226] // Azul por defecto
+        if (position === 1) primaryColor = [255, 215, 0] // Oro
+        else if (position === 2) primaryColor = [192, 192, 192] // Plata
+        else if (position === 3) primaryColor = [205, 127, 50] // Bronce
 
-        // Header background
+        // Fondo de la cabecera
         doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
         doc.rect(0, 0, 297, 40, 'F')
 
-        // Title
+        // Título
         doc.setTextColor(255, 255, 255)
         doc.setFontSize(32)
         doc.setFont('helvetica', 'bold')
         doc.text(cleanText(data.title), 148.5, 25, { align: 'center' })
 
-        // Subtitle
+        // Subtítulo
         doc.setFontSize(18)
         doc.text(data.subtitlePDF, 148.5, 35, { align: 'center' })
 
-        // Body
+        // Cuerpo
         doc.setTextColor(0, 0, 0)
         doc.setFontSize(24)
         doc.setFont('helvetica', 'bold')
@@ -103,31 +103,31 @@ export function Certificate({ position, teamName, studentName }: CertificateProp
         doc.setFont('helvetica', 'normal')
         doc.text('Certifica que', 148.5, 75, { align: 'center' })
 
-        // Student name
+        // Nombre del estudiante
         doc.setFontSize(28)
         doc.setFont('helvetica', 'bold')
         doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
         doc.text(cleanText(studentName), 148.5, 95, { align: 'center' })
 
-        // Team info
+        // Información del equipo
         doc.setTextColor(0, 0, 0)
         doc.setFontSize(16)
         doc.setFont('helvetica', 'normal')
         doc.text(`Como miembro del ${cleanText(teamName)}`, 148.5, 110, { align: 'center' })
         doc.text('Ha participado exitosamente en la Hackathon 2026', 148.5, 120, { align: 'center' })
 
-        // Footer
+        // Pie de página
         doc.setFontSize(12)
         doc.setTextColor(100, 100, 100)
         doc.text('IES El Caminas - Castellon', 148.5, 180, { align: 'center' })
         doc.text('Enero 2026', 148.5, 188, { align: 'center' })
 
-        // Border
+        // Borde
         doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2])
         doc.setLineWidth(2)
         doc.rect(10, 10, 277, 190)
 
-        // Save PDF
+        // Guardar PDF
         doc.save(`Certificado_${cleanText(studentName).replace(/\s+/g, '_')}_Hackathon2026.pdf`)
     }
 

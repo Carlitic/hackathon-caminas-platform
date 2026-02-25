@@ -31,8 +31,8 @@ export default function LoginPage() {
         setLoading(false)
 
         if (result.success) {
-            // Force full page reload to ensure cookies are seen by middleware
-            // Redirect to /dashboard which handles role-based routing centralized
+            // Forzar recarga completa de la página para asegurar que el middleware vea las cookies
+            // Redirigir a /dashboard que maneja el enrutamiento basado en roles de forma centralizada
             window.location.href = '/dashboard';
         } else {
             console.error('Login error:', result.error)

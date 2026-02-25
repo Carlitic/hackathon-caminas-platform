@@ -1,11 +1,11 @@
 import { supabase } from "./supabase"
 
 // =====================================================
-// REQUIREMENTS FILTERING FOR STUDENTS
+// FILTRADO DE REQUISITOS PARA ESTUDIANTES
 // =====================================================
 
 export async function getMyRequirements(studentId: string) {
-    // Get student profile to know their cycle
+    // Obtener perfil del estudiante para conocer su ciclo
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('cycle, id')
@@ -14,13 +14,13 @@ export async function getMyRequirements(studentId: string) {
 
     if (profileError) throw profileError
 
-    // Extract cycle type (DAW, DAM, or ASIR) from full cycle string
+    // Extraer tipo de ciclo (DAW, DAM o ASIR) de la cadena completa del ciclo
     let cycleType = ''
     if (profile.cycle?.includes('DAW')) cycleType = 'DAW'
     else if (profile.cycle?.includes('DAM')) cycleType = 'DAM'
     else if (profile.cycle?.includes('ASIR')) cycleType = 'ASIR'
 
-    // Get all requirements
+    // Obtener todos los requisitos
     const { data: allRequirements, error } = await supabase
         .from('requirements')
         .select('*')
@@ -28,20 +28,20 @@ export async function getMyRequirements(studentId: string) {
 
     if (error) throw error
 
-    // Filter requirements based on:
-    // 1. for_all_students = true (everyone sees it)
-    // 2. target_cycles includes student's cycle
-    // 3. target_students includes student's ID
+    // Filtrar requisitos basándose en:
+    // 1. for_all_students = true (todos lo ven)
+    // 2. target_cycles incluye el ciclo del estudiante
+    // 3. target_students incluye el ID del estudiante
     const filteredRequirements = allRequirements.filter(req => {
-        // If for all students, show it
+        // Si es para todos los estudiantes, mostrar
         if (req.for_all_students) return true
 
-        // If target_cycles is set and includes student's cycle
+        // Si target_cycles está configurado e incluye el ciclo del estudiante
         if (req.target_cycles && req.target_cycles.length > 0) {
             if (req.target_cycles.includes(cycleType)) return true
         }
 
-        // If target_students includes this student
+        // Si target_students incluye a este estudiante
         if (req.target_students && req.target_students.includes(studentId)) {
             return true
         }
@@ -53,7 +53,7 @@ export async function getMyRequirements(studentId: string) {
 }
 
 // =====================================================
-// PROFILE MANAGEMENT FUNCTIONS
+// FUNCIONES DE GESTIÓN DE PERFIL
 // =====================================================
 
 export async function updateStudentProfile(userId: string, data: {

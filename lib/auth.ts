@@ -22,10 +22,10 @@ export interface LoginData {
     password: string
 }
 
-// Register Student
+// Registrar Estudiante
 export async function registerStudent(data: RegisterStudentData) {
     try {
-        // 1. Create auth user
+        // 1. Crear usuario en auth
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email: data.email,
             password: data.password,
@@ -34,7 +34,7 @@ export async function registerStudent(data: RegisterStudentData) {
         if (authError) throw authError
         if (!authData.user) throw new Error('No user returned from signup')
 
-        // 2. Create profile
+        // 2. Crear perfil
         const { error: profileError } = await supabase
             .from('profiles')
             .insert({
@@ -55,10 +55,10 @@ export async function registerStudent(data: RegisterStudentData) {
     }
 }
 
-// Register Teacher
+// Registrar Profesor
 export async function registerTeacher(data: RegisterTeacherData) {
     try {
-        // 1. Create auth user
+        // 1. Crear usuario en auth
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email: data.email,
             password: data.password,
@@ -67,7 +67,7 @@ export async function registerTeacher(data: RegisterTeacherData) {
         if (authError) throw authError
         if (!authData.user) throw new Error('No user returned from signup')
 
-        // 2. Create profile
+        // 2. Crear perfil
         const { error: profileError } = await supabase
             .from('profiles')
             .insert({
@@ -88,7 +88,7 @@ export async function registerTeacher(data: RegisterTeacherData) {
     }
 }
 
-// Login
+// Iniciar Sesión
 export async function login(data: LoginData) {
     try {
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -99,7 +99,7 @@ export async function login(data: LoginData) {
         if (authError) throw authError
         if (!authData.user) throw new Error('No user returned from login')
 
-        // Get user profile to check role and approval status
+        // Obtener el perfil del usuario para comprobar el rol y el estado de aprobación
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -108,7 +108,7 @@ export async function login(data: LoginData) {
 
         if (profileError) throw profileError
 
-        // Check if student is approved
+        // Comprobar si el estudiante está aprobado
         if (profile.role === 'student' && profile.approval_status !== 'approved') {
             await supabase.auth.signOut()
             throw new Error('Tu cuenta aún no ha sido aprobada por tu tutor')
@@ -120,13 +120,13 @@ export async function login(data: LoginData) {
     }
 }
 
-// Logout
+// Cerrar Sesión
 export async function logout() {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
 }
 
-// Get current user profile
+// Obtener perfil del usuario actual
 export async function getCurrentUserProfile() {
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -141,7 +141,7 @@ export async function getCurrentUserProfile() {
     return profile
 }
 
-// Get tutors for student registration
+// Obtener tutores para el registro de estudiantes
 export async function getTutors() {
     const { data, error } = await supabase
         .from('profiles')

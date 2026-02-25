@@ -70,16 +70,16 @@ export default function TeacherDashboard() {
     const [teamCompositions, setTeamCompositions] = useState<Record<string, any>>({})
     const [availableStudents, setAvailableStudents] = useState<any[]>([])
 
-    // Voting State
+    // Estado de Votación
     const [myVote, setMyVote] = useState<number | null>(null)
     const [votingOpen, setVotingOpen] = useState(true)
 
-    // Edit dialog state
+    // Estado del diálogo de edición
     const [editDialog, setEditDialog] = useState(false)
     const [editingStudent, setEditingStudent] = useState<any>(null)
     const [editForm, setEditForm] = useState({ full_name: "", email: "", cycle: "" })
 
-    // Confirmation Dialog State
+    // Estado del Diálogo de Confirmación
     const [actionToConfirm, setActionToConfirm] = useState<{
         type: 'deny' | 'delete' | 'remove_from_team' | 'vote',
         data: any,
@@ -87,7 +87,7 @@ export default function TeacherDashboard() {
         description: string
     } | null>(null)
 
-    // Requirements State
+    // Estado de Requisitos
     const [requirements, setRequirements] = useState<any[]>([])
     const [reqDialog, setReqDialog] = useState(false)
     const [editingReq, setEditingReq] = useState<any>(null)
@@ -188,7 +188,7 @@ export default function TeacherDashboard() {
         try {
             const pending = await getPendingStudents(userProfile.id)
             const myStudentsData = await getMyStudents(userProfile.id)
-            const teamsData = await getTeams(userProfile.tutor_group.charAt(0)) // Wait, getTeams in lib might not take args?
+            const teamsData = await getTeams(userProfile.tutor_group.charAt(0)) // Cargar equipos solo de este curso
             const availableData = await getStudentsWithoutTeam(userProfile.tutor_group)
 
             setPendingStudents(pending)
@@ -196,7 +196,7 @@ export default function TeacherDashboard() {
             setTeams(teamsData)
             setAvailableStudents(availableData)
 
-            // Load team compositions
+            // Cargar composiciones de equipos
             const compositions: Record<string, any> = {}
             for (const team of teamsData) {
                 try {
@@ -327,7 +327,7 @@ export default function TeacherDashboard() {
     }
 
     async function handleCreateTeam() {
-        const year = profile.tutor_group.charAt(0) // "1" or "2"
+        const year = profile.tutor_group.charAt(0) // "1" o "2"
         try {
             await createTeam(year)
             toast.success('Equipo creado')
@@ -451,7 +451,7 @@ export default function TeacherDashboard() {
                                         <Badge variant={votingOpen ? "default" : "destructive"}>
                                             {votingOpen ? "Votación Activa" : "Votación Finalizada"}
                                         </Badge>
-                                        {/* SIMULATION TOGGLE */}
+                                        {/* INTERRUPTOR DE SIMULACIÓN */}
                                         <Button size="xs" variant="outline" onClick={() => setVotingOpen(!votingOpen)}>
                                             {votingOpen ? "Simular Cierre" : "Simular Apertura"}
                                         </Button>
@@ -463,7 +463,7 @@ export default function TeacherDashboard() {
                                             <p className="text-muted-foreground col-span-3 text-center">No hay equipos registrados para votar.</p>
                                         ) : (
                                             teams.map((team) => {
-                                                const teamNum = team.id // Assuming team has ID
+                                                const teamNum = team.id // Asumiendo que el equipo tiene ID
                                                 const isMyVote = myVote === teamNum
                                                 return (
                                                     <Card key={teamNum} className={`transition-all ${isMyVote ? 'ring-2 ring-primary bg-primary/5' : ''}`}>
@@ -558,7 +558,7 @@ export default function TeacherDashboard() {
                         <TabsTrigger value="voting">Votación</TabsTrigger>
                     </TabsList>
 
-                    {/* Pending Students Tab */}
+                    {/* Pestaña Estudiantes Pendientes */}
                     <TabsContent value="pending" className="space-y-4">
                         <Card>
                             <CardHeader>
@@ -608,7 +608,7 @@ export default function TeacherDashboard() {
                         </Card>
                     </TabsContent>
 
-                    {/* My Students Tab */}
+                    {/* Pestaña Mis Estudiantes */}
                     <TabsContent value="students" className="space-y-4">
                         <Card>
                             <CardHeader>
@@ -664,10 +664,10 @@ export default function TeacherDashboard() {
                         </Card>
                     </TabsContent>
 
-                    {/* Teams Tab */}
+                    {/* Pestaña Equipos */}
                     <TabsContent value="teams" className="space-y-4">
                         <div className="grid md:grid-cols-2 gap-4">
-                            {/* Available Students */}
+                            {/* Estudiantes Disponibles */}
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Alumnos Disponibles</CardTitle>
@@ -713,7 +713,7 @@ export default function TeacherDashboard() {
                                 </CardContent>
                             </Card>
 
-                            {/* Teams */}
+                            {/* Equipos */}
                             <Card>
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
@@ -784,7 +784,7 @@ export default function TeacherDashboard() {
                     </TabsContent>
                 </Tabs>
 
-                {/* Requirements Tab */}
+                {/* Pestaña Requisitos */}
                 <TabsContent value="requirements" className="space-y-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
@@ -840,7 +840,7 @@ export default function TeacherDashboard() {
                     </Card>
                 </TabsContent>
 
-                {/* Voting Tab */}
+                {/* Pestaña Votación */}
                 <TabsContent value="voting" className="space-y-4">
                     <Card>
                         <CardHeader>
@@ -881,7 +881,7 @@ export default function TeacherDashboard() {
                     </Card>
                 </TabsContent>
 
-                {/* Edit Dialog */}
+                {/* Diálogo de Edición */}
                 <Dialog open={editDialog} onOpenChange={setEditDialog}>
                     <DialogContent>
                         <DialogHeader>
@@ -935,7 +935,7 @@ export default function TeacherDashboard() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-                {/* Requirements Dialog */}
+                {/* Diálogo de Requisitos */}
                 <Dialog open={reqDialog} onOpenChange={handleCloseReqDialog}>
                     <DialogContent className="max-w-2xl">
                         <DialogHeader>

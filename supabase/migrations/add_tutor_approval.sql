@@ -1,25 +1,25 @@
--- Migration: Add tutor approval system
--- This adds the tutor_approved field and unique constraint
+-- Migración: Añadir sistema de aprobación de tutores
+-- Esto añade el campo tutor_approved y la restricción única
 
--- Step 1: Add tutor_approved column
+-- Paso 1: Añadir columna tutor_approved
 ALTER TABLE profiles 
 ADD COLUMN IF NOT EXISTS tutor_approved BOOLEAN DEFAULT false;
 
--- Step 2: Add the unique constraint for approved tutors
--- Note: EXCLUDE constraint requires btree_gist extension
+-- Paso 2: Añadir la restricción única para tutores aprobados
+-- Nota: la restricción EXCLUDE requiere la extensión btree_gist
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
--- Step 3: Add the constraint
+-- Paso 3: Añadir la restricción
 ALTER TABLE profiles
 ADD CONSTRAINT unique_approved_tutor_per_group 
   EXCLUDE USING gist (tutor_group WITH =) 
   WHERE (is_tutor = true AND tutor_approved = true);
 
--- Step 4: Update existing tutors (optional - approve all existing tutors)
--- Uncomment the line below if you want to auto-approve existing tutors
+-- Paso 4: Actualizar tutores existentes (opcional - aprobar todos los tutores existentes)
+-- Descomentar la línea de abajo si se quiere auto-aprobar los tutores existentes
 -- UPDATE profiles SET tutor_approved = true WHERE is_tutor = true;
 
--- Verification query
+-- Consulta de verificación
 SELECT 
   full_name, 
   tutor_group, 
